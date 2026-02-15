@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+.webassets-cache
+
+# Uploads y datos generados
+static/uploads/*
+!static/uploads/.gitkeep
+logs/*
+!logs/.gitkeep
+data/*
+!data/.gitkeep
+
+# Environment
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporal
+*.log
+*.tmp
+
+.env

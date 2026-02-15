@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Registro{% endblock %}
+
+{% block body %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="logo-section">
+            <div class="logo-circle">
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="28" fill="#fff" stroke="#6366f1" stroke-width="2"/>
+                    <text x="30" y="38" text-anchor="middle" font-size="24" fill="#6366f1" font-weight="bold">IL</text>
+                </svg>
+            </div>
+            <h1 class="platform-name">InternLink</h1>
+            <p class="platform-subtitle">Crear Cuenta Nueva</p>
+        </div>
+
+        <div class="auth-form-section">
+            <h2 class="form-title">Complete el formulario de registro</h2>
+            
+            {% if error %}
+            <div class="alert alert-error">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('register') }}" class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label for="name">Nombre completo</label>
+                    <input type="text" id="name" name="name" required 
+                           placeholder="Juan Pérez" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="usuario@ejemplo.com" class="form-input">
+                    <small id="emailStatus" class="form-hint"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="••••••••" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Tipo de cuenta</label>
+                    <select id="role" name="role" class="form-input">
+                        <option value="student">Estudiante</option>
+                        <option value="company">Empresa</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Registrarse
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <a href="{{ url_for('login') }}" class="link-primary">¿Ya tiene cuenta? Inicie sesión</a>
+            </div>
+
+            <div class="footer-info">
+                <p>Competencias Digitales | InternLink CTF Lab</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ACTO 1: Enumeración de usuarios vía API
+document.getElementById('email').addEventListener('blur', async function() {
+    const email = this.value;
+    const statusEl = document.getElementById('emailStatus');
+    
+    if (!email) return;
+    
+    try {
+        const response = await fetch('/api/check-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.exists) {
+            statusEl.textContent = '⚠️ ' + data.message;
+            statusEl.style.color = '#ef4444';
+            if (data.flag) {
+                console.log('🚩 FLAG encontrado:', data.flag);
+            }
+        } else {
+            statusEl.textContent = '✓ ' + data.message;
+            statusEl.style.color = '#10b981';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+</script>
+{% endblock %}

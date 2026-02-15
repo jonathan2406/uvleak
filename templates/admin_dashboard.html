@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Administrador{% endblock %}
+
+{% block body %}
+<div class="dashboard-container">
+    <nav class="dashboard-nav">
+        <div class="nav-brand">
+            <h2>InternLink</h2>
+            <span class="badge badge-admin">Administrador</span>
+        </div>
+        <div class="nav-user">
+            <span>{{ user.name }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-content">
+        <div class="dashboard-header">
+            <h1>🎉 ¡Felicidades! Panel de Administrador</h1>
+            <p>Has completado la escalada de privilegios</p>
+        </div>
+
+        <div class="alert alert-success">
+            <strong>🚩 FLAG FINAL:</strong> {{ flag }}
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Card: Gestión de Salarios -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>💰 Gestión de Salarios</h3>
+                </div>
+                <div class="card-body">
+                    <p>Modifica los salarios de los estudiantes sin restricciones.</p>
+                    <div class="form-group">
+                        <label>ID Estudiante:</label>
+                        <input type="number" id="salaryStudentId" value="1" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Nuevo Salario:</label>
+                        <input type="number" id="salaryAmount" value="5000000" class="form-input">
+                    </div>
+                    <button onclick="updateSalary()" class="btn btn-primary">
+                        Actualizar Salario
+                    </button>
+                    <div id="salaryStatus" class="mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Card: Aprobar Ofertas -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>✅ Aprobar Ofertas</h3>
+                </div>
+                <div class="card-body">
+                    <p>Aprueba o rechaza ofertas de empleo.</p>
+                    <div class="form-group">
+                        <label>ID Oferta:</label>
+                        <input type="number" id="offerId" value="1" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado:</label>
+                        <select id="offerStatus" class="form-input">
+                            <option value="approved">Aprobado</option>
+                            <option value="rejected">Rechazado</option>
+                            <option value="pending">Pendiente</option>
+                        </select>
+                    </div>
+                    <button onclick="approveOffer()" class="btn btn-primary">
+                        Cambiar Estado
+                    </button>
+                    <div id="offerStatusResult" class="mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Card: Estudiantes -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>👨‍🎓 Estudiantes Registrados</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list">
+                        {% for student in students %}
+                        <li>
+                            <strong>{{ student.name }}</strong><br>
+                            <small>{{ student.email }} | ID: {{ student.id }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Card: Resumen CTF -->
+            <div class="card card-flag">
+                <div class="card-header">
+                    <h3>🏆 Resumen del CTF</h3>
+                </div>
+                <div class="card-body">
+                    <h4>Vulnerabilidades Explotadas:</h4>
+                    <ol>
+                        <li>✅ Enumeración de usuarios</li>
+                        <li>✅ Stored XSS vía CV</li>
+                        <li>✅ Session Hijacking</li>
+                        <li>✅ IDOR Horizontal</li>
+                        <li>✅ Mass Assignment</li>
+                        <li>✅ Binary File Analysis</li>
+                        <li>✅ JWT Forgery</li>
+                        <li>✅ Exposed Logs</li>
+                        <li>✅ Full Admin Access</li>
+                    </ol>
+                    
+                    <div id="flagsList" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Actualizar salario
+async function updateSalary() {
+    const studentId = document.getElementById('salaryStudentId').value;
+    const amount = document.getElementById('salaryAmount').value;
+    const statusEl = document.getElementById('salaryStatus');
+    
+    try {
+        const response = await fetch('/api/admin/update-salary', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                salary: amount
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusEl.innerHTML = '<div class="alert alert-success">✅ Salario actualizado correctamente</div>';
+        }
+    } catch (error) {
+        statusEl.innerHTML = '<div class="alert alert-error">❌ Error al actualizar</div>';
+    }
+}
+
+// Aprobar oferta
+async function approveOffer() {
+    const offerId = document.getElementById('offerId').value;
+    const status = document.getElementById('offerStatus').value;
+    const resultEl = document.getElementById('offerStatusResult');
+    
+    try {
+        const response = await fetch('/api/admin/approve-offer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                offer_id: offerId,
+                status: status
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultEl.innerHTML = '<div class="alert alert-success">✅ Estado actualizado</div>';
+        }
+    } catch (error) {
+        resultEl.innerHTML = '<div class="alert alert-error">❌ Error al actualizar</div>';
+    }
+}
+
+// Sistema de flags
+function displayFlags() {
+    const flagsList = document.getElementById('flagsList');
+    const flags = JSON.parse(localStorage.getItem('ctf_flags') || '[]');
+    
+    if (flags.length === 0) {
+        flagsList.innerHTML = '<p class="text-muted">No hay flags registrados...</p>';
+    } else {
+        flagsList.innerHTML = '<h4>🚩 Flags Capturados (' + flags.length + '/9):</h4><ul class="flag-list">' + 
+            flags.map(f => `<li>🚩 <code>${f}</code></li>`).join('') + 
+            '</ul>';
+    }
+}
+
+displayFlags();
+
+// Agregar flag final automáticamente
+const flags = JSON.parse(localStorage.getItem('ctf_flags') || '[]');
+if (!flags.includes('{{ flag }}')) {
+    flags.push('{{ flag }}');
+    localStorage.setItem('ctf_flags', JSON.stringify(flags));
+    displayFlags();
+}
+</script>
+{% endblock %}

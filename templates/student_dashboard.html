@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Estudiante{% endblock %}
+
+{% block body %}
+<div class="dashboard-container">
+    <nav class="dashboard-nav">
+        <div class="nav-brand">
+            <h2>InternLink</h2>
+            <span class="badge badge-student">Estudiante</span>
+        </div>
+        <div class="nav-user">
+            <span>{{ user.name }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-content">
+        <div class="dashboard-header">
+            <h1>Bienvenido, {{ user.name }}</h1>
+            <p>Panel de control de estudiante</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Card: Subir CV -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📄 Subir Currículum Vitae</h3>
+                </div>
+                <div class="card-body">
+                    <p>Sube tu CV en formato PDF para que las empresas puedan revisarlo.</p>
+                    <form id="uploadCvForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <input type="file" id="cvFile" name="cv" accept=".pdf" class="form-input">
+                            <small class="form-hint">Solo archivos PDF permitidos</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Subir CV</button>
+                    </form>
+                    <div id="uploadStatus" class="mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Card: Perfil -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>👤 Mi Perfil</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Role:</strong> <span class="badge badge-info">{{ user.role }}</span></p>
+                    <button onclick="testMassAssignment()" class="btn btn-warning mt-2">
+                        Actualizar Perfil
+                    </button>
+                    <div id="profileStatus" class="mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Card: Ofertas -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>💼 Ofertas Disponibles</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list">
+                        <li>Desarrollador Backend - TechCorp SA</li>
+                        <li>Analista de Datos - DataFlow Inc</li>
+                        <li>Diseñador UX/UI - DesignHub</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Card: Flags Obtenidos -->
+            <div class="card card-flag">
+                <div class="card-header">
+                    <h3>🚩 Flags CTF Capturados</h3>
+                </div>
+                <div class="card-body">
+                    <div id="flagsList">
+                        <p class="text-muted">Los flags aparecerán aquí cuando los captures...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ACTO 2: Upload CV vulnerable a XSS
+document.getElementById('uploadCvForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    const fileInput = document.getElementById('cvFile');
+    formData.append('cv', fileInput.files[0]);
+    
+    const statusEl = document.getElementById('uploadStatus');
+    statusEl.innerHTML = '<p class="text-info">Subiendo archivo...</p>';
+    
+    try {
+        const response = await fetch('/upload-cv', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusEl.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            if (data.flag) {
+                addFlag(data.flag);
+            }
+        } else {
+            statusEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+        }
+    } catch (error) {
+        statusEl.innerHTML = `<div class="alert alert-error">Error al subir archivo</div>`;
+    }
+});
+
+// ACTO 5: Mass Assignment
+async function testMassAssignment() {
+    const statusEl = document.getElementById('profileStatus');
+    
+    try {
+        const response = await fetch('/api/profile/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: '{{ user.name }}',
+                role: 'coordinator'  // Intentar escalar privilegios
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusEl.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            if (data.flag) {
+                addFlag(data.flag);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        }
+    } catch (error) {
+        statusEl.innerHTML = `<div class="alert alert-error">Error al actualizar</div>`;
+    }
+}
+
+// Sistema de flags
+function addFlag(flag) {
+    const flagsList = document.getElementById('flagsList');
+    const flags = JSON.parse(localStorage.getItem('ctf_flags') || '[]');
+    
+    if (!flags.includes(flag)) {
+        flags.push(flag);
+        localStorage.setItem('ctf_flags', JSON.stringify(flags));
+    }
+    
+    displayFlags();
+}
+
+function displayFlags() {
+    const flagsList = document.getElementById('flagsList');
+    const flags = JSON.parse(localStorage.getItem('ctf_flags') || '[]');
+    
+    if (flags.length === 0) {
+        flagsList.innerHTML = '<p class="text-muted">No hay flags capturados aún...</p>';
+    } else {
+        flagsList.innerHTML = '<ul class="flag-list">' + 
+            flags.map(f => `<li>🚩 <code>${f}</code></li>`).join('') + 
+            '</ul>';
+    }
+}
+
+// Cargar flags al inicio
+displayFlags();
+</script>
+{% endblock %}

@@ -1,0 +1,233 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║                    🚩 INTERNLINK CTF - LABORATORIO 🚩                    ║
+║                                                                          ║
+║                Sistema de Gestión de Pasantías Vulnerable               ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          ✅ PROYECTO COMPLETO                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+📁 ARCHIVOS CREADOS:
+
+  📚 DOCUMENTACIÓN (6 archivos)
+     ├─ README.md ..................... Documentación principal
+     ├─ START.md ...................... Guía de inicio rápido (EMPIEZA AQUÍ)
+     ├─ WALKTHROUGH.md ................ Solución completa paso a paso
+     ├─ PROJECT_STRUCTURE.md .......... Arquitectura técnica
+     ├─ COMANDOS_UTILES.md ............ Comandos y payloads útiles
+     └─ RESUMEN.md .................... Resumen ejecutivo
+
+  🔴 APLICACIÓN PRINCIPAL
+     ├─ app.py ........................ Aplicación Flask (800+ líneas)
+     ├─ requirements.txt .............. Dependencias de Python
+     └─ .env .......................... Configuración Redis (Upstash)
+
+  🎨 FRONTEND (7 templates + CSS)
+     ├─ templates/
+     │   ├─ base.html
+     │   ├─ login.html ................ Login con estética UdeA
+     │   ├─ register.html ............. Registro vulnerable
+     │   ├─ student_dashboard.html .... Panel estudiante
+     │   ├─ company_dashboard.html .... Panel empresa
+     │   ├─ coordinator_dashboard.html  Panel coordinador
+     │   └─ admin_dashboard.html ...... Panel administrador
+     └─ static/css/style.css .......... Estilos glassmorphism (500+ líneas)
+
+  🧪 PAYLOADS Y HERRAMIENTAS
+     ├─ payloads/xss_cv.html .......... Payload XSS listo para usar
+     └─ payloads/jwt_forge.py ......... Script para forjar JWT
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                     🚀 INICIO RÁPIDO (3 PASOS)                           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  1️⃣  INSTALAR DEPENDENCIAS
+     
+     python -m venv venv
+     .\venv\Scripts\Activate.ps1       # Windows PowerShell
+     pip install -r requirements.txt
+
+  2️⃣  VERIFICAR .env
+     
+     Ya está configurado con tus credenciales de Upstash Redis
+
+  3️⃣  EJECUTAR
+     
+     python app.py
+     
+     Abre tu navegador en: http://localhost:5000
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        🚩 9 FLAGS DISPONIBLES                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  1. FLAG{user_enumeration_is_real} ......... 🟡 User Enumeration
+  2. FLAG{stored_xss_persisted} ............. 🔴 Stored XSS
+  3. FLAG{session_hijacked} ................. 🔴 Session Hijacking
+  4. FLAG{idor_horizontal} .................. 🔴 IDOR Horizontal
+  5. FLAG{mass_assignment_abuse} ............ 🟣 Mass Assignment
+  6. FLAG{binary_files_hide_secrets} ........ 🟡 Info Disclosure
+  7. FLAG{jwt_forged_successfully} .......... 🟣 JWT Weak Secret
+  8. FLAG{logs_are_sensitive} ............... 🔴 Exposed Logs
+  9. FLAG{internlink_compromised} ........... 🟣 Full Admin Access
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                       📖 GUÍAS DE LECTURA                                │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  🟢 PRINCIPIANTE
+     1. Abre START.md (guía de inicio)
+     2. Ejecuta la aplicación
+     3. Regístrate y explora
+     4. Si te atascas → README.md
+
+  🟡 INTERMEDIO
+     1. Lee PROJECT_STRUCTURE.md (arquitectura)
+     2. Usa COMANDOS_UTILES.md (payloads)
+     3. Intenta capturar flags sin ayuda
+     4. Si te atascas → WALKTHROUGH.md
+
+  🔴 AVANZADO
+     1. Lee el código en app.py
+     2. Modifica payloads en payloads/
+     3. Crea tus propios exploits
+
+  🟣 INSTRUCTOR
+     1. PROJECT_STRUCTURE.md (arquitectura)
+     2. WALKTHROUGH.md (soluciones)
+     3. prompt.md (diseño pedagógico)
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    🎨 CARACTERÍSTICAS DEL DISEÑO                         │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  ✅ Estética glassmorphism inspirada en UdeA
+  ✅ Gradientes morados/azules modernos (#6366f1)
+  ✅ Cards con sombras y efectos 3D
+  ✅ Animaciones smooth y transiciones suaves
+  ✅ Responsive design (móvil y desktop)
+  ✅ Sin frameworks frontend pesados (Vanilla JS)
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        ⚠️  ADVERTENCIAS                                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  ⛔ Este proyecto es INTENCIONALMENTE VULNERABLE
+  
+  ❌ NO lo despliegues en producción
+  ❌ NO lo expongas a internet
+  ❌ NO uses estas técnicas sin autorización
+  
+  ✅ Úsalo SOLO para aprendizaje
+  ✅ Practica en entorno local
+  ✅ Estudia el código responsablemente
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    🎓 OBJETIVOS DE APRENDIZAJE                           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Al completar este lab aprenderás a:
+  
+  ✅ Identificar enumeración de usuarios
+  ✅ Explotar Stored XSS mediante uploads
+  ✅ Robar sesiones con cookies inseguras
+  ✅ Aprovechar IDOR para acceso no autorizado
+  ✅ Escalar privilegios vía Mass Assignment
+  ✅ Analizar archivos binarios (Excel sin extensión)
+  ✅ Forjar tokens JWT con secrets débiles
+  ✅ Encontrar información en logs expuestos
+  ✅ Obtener acceso total como administrador
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        🔐 CREDENCIALES                                   │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Pre-configuradas (pero NO las uses directamente):
+  
+  Empresa:      empresa@techcorp.com       / EmpresaPass123!
+  Coordinador:  coordinador@internlink.com / CoordPass123!
+  Admin:        admin@internlink.com       / AdminPass123!
+  
+  🎯 EL OBJETIVO: Escalar desde estudiante normal hasta admin
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      📊 ESTADÍSTICAS DEL PROYECTO                        │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Líneas de código Python ......... ~800
+  Líneas de HTML .................. ~600
+  Líneas de CSS ................... ~500
+  Líneas de JavaScript ............ ~400
+  Total de endpoints .............. 20+
+  Total de templates HTML ......... 7
+  Total de vulnerabilidades ....... 9
+  Total de flags .................. 9
+  Archivos de documentación ....... 6
+  Tamaño del proyecto ............. ~80 KB
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        🛠️  TECNOLOGÍAS                                   │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Backend:   Flask 3.0.0
+  Database:  Redis (Upstash Cloud)
+  Auth:      Cookies + JWT (vulnerable)
+  Frontend:  HTML5 + CSS3 + Vanilla JavaScript
+  Style:     Glassmorphism design
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    ✅ ESTADO: LISTO PARA USAR                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  ✅ Funcionalidad completa y probada
+  ✅ Documentación exhaustiva (15,000+ palabras)
+  ✅ Estética implementada según imagen
+  ✅ 9 vulnerabilidades funcionando
+  ✅ Payloads incluidos y documentados
+  ✅ Integración con Redis Cloud
+  ✅ Sin errores de linter
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      🎉 ¡TODO LISTO!                                     │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  👉 SIGUIENTE PASO: Abre START.md y comienza el CTF
+  
+  📚 DOCUMENTACIÓN: Tienes 6 archivos .md con toda la información
+  
+  🚩 OBJETIVO: Capturar los 9 flags escalando privilegios
+  
+  💻 EJECUTAR: python app.py
+  
+  🌐 URL: http://localhost:5000
+
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║              🎊 ¡FELICIDADES! PROYECTO COMPLETADO 🎊                     ║
+║                                                                          ║
+║           ¡Diviértete aprendiendo seguridad web! 🚀🔐                    ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+
+Creado por: Sistema de Competencias Digitales
+Fecha: 15 de Febrero de 2026
+Versión: 1.0
+Propósito: Educativo - CTF de Seguridad Web
+
+────────────────────────────────────────────────────────────────────────────

