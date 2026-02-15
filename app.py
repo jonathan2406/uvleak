@@ -15,7 +15,7 @@ from datetime import datetime
 import jwt
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-import requests as http_client
+from upstash_redis import Redis
 
 load_dotenv()
 
@@ -26,58 +26,44 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 JWT_SECRET = 'internlink2024'
 
-redis_url = os.getenv('UPSTASH_REDIS_REST_URL')
-redis_token = os.getenv('UPSTASH_REDIS_REST_TOKEN')
+# Cliente Redis Upstash con interfaz compatible con el resto de la app
+_upstash = Redis.from_env()
 
 
-class RedisClient:
-    def __init__(self, url, token):
-        self.url = url.rstrip('/')
-        self.token = token
-        self.headers = {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json'
-        }
-
-    def execute(self, command):
-        resp = http_client.post(self.url, json=command, headers=self.headers)
-        return resp.json().get('result')
+class _Db:
+    """Wrapper que adapta upstash_redis a la interfaz usada en la app."""
 
     def get(self, key):
-        return self.execute(['GET', key])
+        return _upstash.get(key)
 
     def set(self, key, value):
-        return self.execute(['SET', key, value])
+        return _upstash.set(key, value)
 
     def hgetall(self, key):
-        result = self.execute(['HGETALL', key])
-        if not result:
-            return {}
-        return {result[i]: result[i + 1] for i in range(0, len(result), 2)}
+        out = _upstash.hgetall(key)
+        return out if isinstance(out, dict) and out else {}
 
     def hset(self, key, field, value):
-        return self.execute(['HSET', key, field, value])
+        return _upstash.hset(key, field, value)
 
     def hget(self, key, field):
-        return self.execute(['HGET', key, field])
+        return _upstash.hget(key, field)
 
     def hmset(self, key, mapping):
-        command = ['HMSET', key]
-        for k, v in mapping.items():
-            command.extend([k, v])
-        return self.execute(command)
+        return _upstash.hset(key, values=mapping)
 
     def keys(self, pattern):
-        return self.execute(['KEYS', pattern]) or []
+        out = _upstash.keys(pattern)
+        return out if out is not None else []
 
     def delete(self, key):
-        return self.execute(['DEL', key])
+        return _upstash.delete(key)
 
     def incr(self, key):
-        return self.execute(['INCR', key])
+        return _upstash.incr(key)
 
 
-db = RedisClient(redis_url, redis_token)
+db = _Db()
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('logs', exist_ok=True)
@@ -165,6 +151,17 @@ def init_db():
             'phone': '+57 300 333 4444',
         })
         db.hset('email_to_key', 'andres.lopez@mail.com', 'student:2')
+
+    # Sincronizar índice email_to_key con usuarios iniciales (por si ya existían sin índice)
+    for email, key in [
+        ('empresa@techcorp.com', 'company:1'),
+        ('rrhh@dataflow.com', 'company:2'),
+        ('coordinador@internlink.com', 'coordinator:1'),
+        ('admin@internlink.com', 'admin:1'),
+        ('maria.gonzalez@mail.com', 'student:1'),
+        ('andres.lopez@mail.com', 'student:2'),
+    ]:
+        db.hset('email_to_key', email, key)
 
     # Asignaciones de pasantía (intern records)
     if not db.hgetall('intern:1'):
