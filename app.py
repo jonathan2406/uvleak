@@ -101,6 +101,7 @@ def init_db():
             'api_key': 'tc_prod_FLAG{session_hijacked}_v2',
             'contact_phone': '+57 604 555 0101',
         })
+        db.hset('email_to_key', 'empresa@techcorp.com', 'company:1')
 
     if not db.hgetall('company:2'):
         db.hmset('company:2', {
@@ -113,6 +114,7 @@ def init_db():
             'api_key': 'df_prod_8a2c4e6f',
             'contact_phone': '+57 604 555 0202',
         })
+        db.hset('email_to_key', 'rrhh@dataflow.com', 'company:2')
 
     # Coordinador
     if not db.hgetall('coordinator:1'):
@@ -124,6 +126,7 @@ def init_db():
             'role': 'coordinator',
             'department': 'Pasantías y Prácticas',
         })
+        db.hset('email_to_key', 'coordinador@internlink.com', 'coordinator:1')
 
     # Administrador
     if not db.hgetall('admin:1'):
@@ -136,6 +139,7 @@ def init_db():
             'system_key': 'FLAG{internlink_compromised}',
             'admin_notes': 'Cuenta principal del sistema. Ref: FLAG{user_enumeration_is_real}',
         })
+        db.hset('email_to_key', 'admin@internlink.com', 'admin:1')
 
     # Estudiantes de ejemplo
     if not db.hgetall('student:1'):
@@ -148,6 +152,7 @@ def init_db():
             'university': 'Universidad de Medellín',
             'phone': '+57 300 111 2222',
         })
+        db.hset('email_to_key', 'maria.gonzalez@mail.com', 'student:1')
 
     if not db.hgetall('student:2'):
         db.hmset('student:2', {
@@ -159,6 +164,7 @@ def init_db():
             'university': 'Universidad Nacional',
             'phone': '+57 300 333 4444',
         })
+        db.hset('email_to_key', 'andres.lopez@mail.com', 'student:2')
 
     # Asignaciones de pasantía (intern records)
     if not db.hgetall('intern:1'):
@@ -360,23 +366,21 @@ def get_admin_user():
 
 
 def check_email_exists(email):
-    for pattern in ['student:*', 'company:*', 'coordinator:*', 'admin:*']:
-        for key in db.keys(pattern):
-            data = db.hgetall(key)
-            if data.get('email') == email:
-                return True
-    return False
+    """Verifica si un email existe usando el índice email_to_key (optimizado)."""
+    key = db.hget('email_to_key', email)
+    return key is not None and key != ''
 
 
 def find_user_by_email(email):
-    """Buscar un usuario por email en todas las colecciones."""
-    for pattern in ['student:*', 'company:*', 'coordinator:*', 'admin:*']:
-        for key in db.keys(pattern):
-            data = db.hgetall(key)
-            if data.get('email') == email:
-                data['user_key'] = key
-                return data, key
-    return None, None
+    """Buscar un usuario por email usando el índice email_to_key (optimizado)."""
+    key = db.hget('email_to_key', email)
+    if not key:
+        return None, None
+    data = db.hgetall(key)
+    if not data:
+        return None, None
+    data['user_key'] = key
+    return data, key
 
 
 # ---------------------------------------------------------------------------
@@ -491,7 +495,9 @@ def register():
             'role': role,
             'created_at': datetime.now().isoformat(),
         }
-        db.hmset(f'{role}:{user_id}', user_data)
+        user_key = f'{role}:{user_id}'
+        db.hmset(user_key, user_data)
+        db.hset('email_to_key', email, user_key)
 
         log_entry(f"Nuevo registro: {email} — Role: {role}")
         return redirect(url_for('login'))
@@ -506,17 +512,13 @@ def _key_can_invite(redis_key):
 
 
 def get_registered_users_with_invite_flag():
-    """Lista de usuarios registrados. Mal implementado: devuelve todos con un campo que filtra quién puede invitar."""
+    """Lista de usuarios registrados. Mal implementado: devuelve todos con un campo que filtra quién puede invitar.
+    Optimizado: usa el índice email_to_key."""
+    email_to_key = db.hgetall('email_to_key') or {}
     users = []
-    for pattern in ['student:*', 'company:*', 'coordinator:*', 'admin:*']:
-        for key in db.keys(pattern):
-            data = db.hgetall(key)
-            email = data.get('email')
-            if not email:
-                continue
-            # Solo coordinador y admin (por clave Redis) pueden invitar; estudiantes y empresas no
-            puede_invitar = _key_can_invite(key)
-            users.append({'email': email, 'puede_invitar': puede_invitar})
+    for email, key in email_to_key.items():
+        puede_invitar = _key_can_invite(key)
+        users.append({'email': email, 'puede_invitar': puede_invitar})
     return users
 
 
