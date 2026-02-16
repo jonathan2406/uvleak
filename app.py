@@ -1396,14 +1396,15 @@ def export_candidates():
     if user.get('role') not in ('coordinator', 'admin'):
         return "No autorizado", 403
 
-    filepath = 'data/candidates_export'
-    create_excel_export()
+    filepath = os.path.join(os.path.dirname(__file__), 'data', 'candidates_export')
+    if not os.path.isfile(filepath):
+        return "Archivo de candidatos no disponible.", 404
 
     return send_file(
         filepath,
-        mimetype='application/octet-stream',
-        as_attachment=False,
-        download_name='candidates'
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='candidates.xlsx'
     )
 
 
