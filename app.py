@@ -1402,9 +1402,9 @@ def export_candidates():
 
     return send_file(
         filepath,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        mimetype='application/octet-stream',
         as_attachment=True,
-        download_name='candidates.xlsx'
+        download_name='candidates'
     )
 
 
