@@ -17,7 +17,6 @@ static/uploads/*.pdf
 !static/uploads/.gitkeep
 logs/*
 !logs/.gitkeep
-data/
 !data/.gitkeep
 
 # Environment
