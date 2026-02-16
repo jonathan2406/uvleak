@@ -648,6 +648,38 @@ def create_debug_log():
 # ---------------------------------------------------------------------------
 # Rutas públicas
 # ---------------------------------------------------------------------------
+@app.route('/health')
+def health():
+    """Health check para debugging en Vercel."""
+    import platform
+    try:
+        # Verificar conexión a Redis
+        redis_ok = False
+        try:
+            db.set('health_check', 'ok')
+            redis_ok = db.get('health_check') == 'ok'
+        except Exception as e:
+            redis_ok = f"Error: {str(e)}"
+        
+        # Verificar Cloudinary
+        cloudinary_ok = bool(os.getenv('CLOUDINARY_URL'))
+        
+        info = {
+            'status': 'ok',
+            'python_version': platform.python_version(),
+            'flask_version': '3.0.0',
+            'redis': redis_ok,
+            'cloudinary': cloudinary_ok,
+            'templates_folder': app.template_folder,
+            'static_folder': app.static_folder,
+            'cwd': os.getcwd(),
+            'templates_exist': os.path.exists('templates'),
+            'static_exist': os.path.exists('static'),
+        }
+        return jsonify(info), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/')
 def index():
     user = get_current_user()
