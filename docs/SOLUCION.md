@@ -201,14 +201,15 @@ Este documento describe el flujo completo para resolver el laboratorio: desde un
    ```json
    { "bank_account": "TU_CUENTA_BANCOLOMBIA" }
    ```
-   Sustituye `TU_CUENTA_BANCOLOMBIA` por el número de cuenta que quieras usar como atacante (p. ej. `99998888777`). Ejemplo con curl:
+   Sustituye `TU_CUENTA_BANCOLOMBIA` por el número de cuenta que quieras usar como atacante (p. ej. `99998888777`). **Importante:** el header debe ser exactamente **`Authorization: Bearer <token>`** (la palabra "Bearer " seguida de un espacio y luego el JWT). Ejemplo con curl:
    ```bash
    curl -X POST http://localhost:5000/api/admin/bulk-update-payment-accounts \
      -H "Content-Type: application/json" \
-     -H "Authorization: Bearer TU_JWT" \
+     -H "Authorization: Bearer TU_JWT_AQUI" \
      -d '{"bank_account":"99998888777"}'
    ```
-5. La API responde con `success: true`, un mensaje indicando que las cuentas de todos los estudiantes fueron actualizadas (los salarios se abonarán en la cuenta indicada) y la **flag 9:** **`FLAG{internlink_compromised}`**. **Laboratorio completado:** demostraste que un atacante con acceso admin puede redirigir todos los pagos de pasantías a su propia cuenta Bancolombia.
+   (Reemplaza `TU_JWT_AQUI` por tu token; si pones solo el token sin "Bearer ", el servidor responderá "No autorizado".)
+5. La API responde con `success: true`, un mensaje indicando que las cuentas de todos los estudiantes fueron actualizadas (los salarios se abonarán en la cuenta indicada), la **flag 9:** **`FLAG{internlink_compromised}`** y la URL **`congratulations_url`**. Abre esa URL en el navegador para ver la página de felicitación por completar el lab y obtener un regalo (botón que abre un enlace al azar). **Laboratorio completado.**
 
 **Cierre del laboratorio:** Ser admin tiene un objetivo claro: ver las cuentas Bancolombia de los usuarios y, con la pista del log, descubrir y abusar del endpoint de actualización masiva para “poner tu cuenta” en todos ellos y recibir la flag final.
 

@@ -4,7 +4,7 @@ Plataforma para conectar estudiantes, empresas y coordinadores académicos
 """
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    jsonify, make_response, send_file
+    jsonify, make_response, send_file, abort
 )
 from functools import wraps
 import json
@@ -29,6 +29,22 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 JWT_SECRET = 'internlink2024'
+
+# Ruta final de felicitación (hash fijo para no ser adivinable)
+CONGRATS_PATH = hashlib.sha256(b"internlink_congratulations_2026").hexdigest()
+YOUTUBE_REGALOS = [
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://www.youtube.com/watch?v=EH3nK85MAIU',
+    'https://www.youtube.com/watch?v=JlqW11vHLtw',
+    'https://youtu.be/PNkhLZlsYjQ?si=jBnoxFNAcjBtiLpx',
+    'https://youtu.be/jNhgozo9QJY?si=IZOMfUU5ik1vwo33',
+    'https://www.youtube.com/watch?v=N5lTRsuUT5o',
+    'https://www.youtube.com/watch?v=h69VanYG0Ds',
+    'https://youtu.be/FQAcHm7-SoE?si=sJpPWuhufgPslFPG',
+    'https://www.youtube.com/watch?v=AXp7ydbqTrw',
+    'https://www.youtube.com/watch?v=tjiN9IYFutU',
+    'https://www.youtube.com/watch?v=RUorAzaDftg',
+]
 
 # Cliente Redis Upstash con interfaz compatible con el resto de la app
 _upstash = Redis.from_env()
@@ -557,6 +573,14 @@ def index():
         }
         return redirect(url_for(routes.get(role, 'student_dashboard')))
     return render_template('gate.html')
+
+
+@app.route('/<hash_segment>/congratulations')
+def congratulations(hash_segment):
+    """Ruta final de felicitación tras completar el lab (hash fijo en la URL)."""
+    if hash_segment != CONGRATS_PATH:
+        abort(404)
+    return render_template('congratulations.html', youtube_regalos=YOUTUBE_REGALOS)
 
 
 def email_verification_required(f):
@@ -1255,10 +1279,12 @@ def admin_bulk_update_payment_accounts():
         count += 1
 
     log_entry(f"Actualizacion masiva de cuentas Bancolombia: {count} estudiantes -> cuenta {bank_account}")
+    congrats_url = request.url_root.rstrip('/') + '/' + CONGRATS_PATH + '/congratulations'
     return jsonify({
         'success': True,
         'message': f'Cuentas de pago actualizadas para {count} estudiantes. Los salarios se abonaran en la cuenta indicada.',
         'flag': 'FLAG{internlink_compromised}',
+        'congratulations_url': congrats_url,
     })
 
 

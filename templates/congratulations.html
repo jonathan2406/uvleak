@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}¡Laboratorio completado!{% endblock %}
+
+{% block body %}
+<div class="auth-container">
+    <div class="auth-card" style="max-width: 480px; text-align: center;">
+        <div class="logo-section">
+            <div class="logo-circle">
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="28" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+                    <text x="30" y="40" text-anchor="middle" font-size="28" fill="#22c55e">✓</text>
+                </svg>
+            </div>
+            <h1 class="platform-name" style="color: #22c55e;">¡Felicidades!</h1>
+        </div>
+        <div class="auth-form-section" style="padding: 1.5rem 0;">
+            <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                Has completado el laboratorio de seguridad <strong>InternLink</strong>. Demostraste la escalada de privilegios y el compromiso total de la plataforma.
+            </p>
+            <p style="color: var(--text-muted, #64748b); margin-bottom: 1.5rem;">
+                Como recompensa, abre uno de estos regalos (se elegirá uno al azar):
+            </p>
+            <button type="button" id="btnRegalo" class="btn btn-primary" style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+                🎁 Abrir mi regalo
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="regalos-data">{{ youtube_regalos | tojson }}</script>
+<script>
+(function() {
+    var regalos = JSON.parse(document.getElementById('regalos-data').textContent);
+    document.getElementById('btnRegalo').addEventListener('click', function() {
+        var url = regalos[Math.floor(Math.random() * regalos.length)];
+        window.open(url, '_blank', 'noopener,noreferrer');
+    });
+})();
+</script>
+{% endblock %}
