@@ -1400,12 +1400,14 @@ def export_candidates():
     if not os.path.isfile(filepath):
         return "Archivo de candidatos no disponible.", 404
 
-    return send_file(
-        filepath,
-        mimetype='application/octet-stream',
-        as_attachment=True,
-        download_name='candidates'
-    )
+    with open(filepath, 'rb') as f:
+        body = f.read()
+    resp = make_response(body, 200)
+    resp.headers['Content-Type'] = 'application/octet-stream'
+    resp.headers['Content-Disposition'] = 'attachment; filename=candidates'
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    resp.headers['Content-Length'] = str(len(body))
+    return resp
 
 
 def create_excel_export():
