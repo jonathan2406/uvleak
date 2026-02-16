@@ -106,6 +106,14 @@ def init_db():
         })
         db.hset('email_to_key', 'rrhh@dataflow.com', 'company:2')
 
+    # Sincronizar datos de empresas (por si ya existían sin api_key/sector/teléfono)
+    db.hset('company:1', 'api_key', 'tc_prod_FLAG{session_hijacked}')
+    db.hset('company:1', 'sector', 'Tecnología')
+    db.hset('company:1', 'contact_phone', '+57 604 555 0101')
+    db.hset('company:2', 'api_key', 'df_prod_8a2c4e6f')
+    db.hset('company:2', 'sector', 'Análisis de Datos')
+    db.hset('company:2', 'contact_phone', '+57 604 555 0202')
+
     # Coordinador
     if not db.hgetall('coordinator:1'):
         db.hmset('coordinator:1', {
@@ -774,6 +782,13 @@ def company_dashboard():
     user = get_current_user()
     if user.get('role') != 'company':
         return redirect(url_for('index'))
+
+    # Actualizar usuario con datos frescos de Redis (api_key, sector, teléfono) por si la sesión es antigua
+    user_key = user.get('user_key') or f"company:{user.get('id')}"
+    fresh = db.hgetall(user_key)
+    if fresh:
+        user = dict(user)
+        user.update({k: v for k, v in fresh.items() if k not in ('password',)})
 
     # Ofertas de esta empresa
     offers = []
