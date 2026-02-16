@@ -13,7 +13,7 @@ instance/
 .webassets-cache
 
 # Uploads y datos generados
-static/uploads/*
+static/uploads/*.pdf
 !static/uploads/.gitkeep
 logs/*
 !logs/.gitkeep
