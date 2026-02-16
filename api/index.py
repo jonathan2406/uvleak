@@ -10,15 +10,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app, init_db, create_debug_log
 
-# Inicializar la base de datos en cada invocación serverless
-# Esto es necesario porque Vercel no mantiene estado entre invocaciones
-try:
-    init_db()
-    create_debug_log()
-except Exception as e:
-    # Log del error pero continuar
-    print(f"Warning: Error inicializando DB: {e}")
+# Variable de control para inicializar solo una vez
+_initialized = False
 
-# Exportar la aplicación Flask para Vercel
-# Vercel espera una variable llamada 'app' o que se use el patrón de handler
-handler = app
+def initialize():
+    """Inicializa la base de datos y logs una sola vez."""
+    global _initialized
+    if not _initialized:
+        try:
+            init_db()
+            create_debug_log()
+            _initialized = True
+            print("Inicialización completada exitosamente")
+        except Exception as e:
+            print(f"Warning: Error inicializando: {e}")
+            import traceback
+            traceback.print_exc()
+
+# Inicializar al cargar el módulo
+initialize()
+
+# Handler para Vercel - Flask app compatible con WSGI
+app = app

@@ -42,3 +42,6 @@ Thumbs.db
 vercelquickstart.md
 VERCEL_QUICKSTART.md
 DEPLOY_VERCEL.md
+
+*.md 
+*.txt

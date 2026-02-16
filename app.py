@@ -124,7 +124,11 @@ try:
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 except (OSError, PermissionError):
     pass  # En serverless no hay sistema de archivos, se usa Cloudinary
-os.makedirs('logs', exist_ok=True)
+
+try:
+    os.makedirs('logs', exist_ok=True)
+except (OSError, PermissionError):
+    pass  # En serverless no se pueden crear directorios
 
 
 # ---------------------------------------------------------------------------
@@ -600,37 +604,44 @@ def log_entry(message):
 
 
 def create_debug_log():
-    """Crea/regenera el archivo de log de debug. En serverless (Vercel), esto regenera el archivo
-    en cada invocación, lo cual está bien porque el contenido es estático (parte del lab)."""
+    """Crea/regenera el archivo de log de debug. En serverless (Vercel), esto guarda el contenido
+    en Redis en lugar del sistema de archivos."""
+    content = (
+        "[2026-01-10 08:15:32] INFO: Servidor iniciado en puerto 5000\n"
+        "[2026-01-10 08:15:33] DEBUG: Conexión a Redis establecida\n"
+        "[2026-01-10 08:16:01] INFO: Login de usuario: admin@internlink.com (role: admin)\n"
+        "[2026-01-10 08:17:45] WARNING: Intento de login fallido para admin@internlink.com\n"
+        "[2026-01-10 08:18:02] DEBUG: Cargando configuración JWT...\n"
+        "[2026-01-10 08:18:02] DEBUG: JWT_SECRET = internlink2024\n"
+        "[2026-01-10 08:18:03] INFO: Módulo JWT inicializado\n"
+        "[2026-01-10 08:20:15] ERROR: Excepción no controlada en /api/company/candidates\n"
+        "    Traceback (most recent call last):\n"
+        "      File \"app.py\", line 342, in get_candidates\n"
+        "        validate_company_ownership(user_id, company_id)\n"
+        "    AttributeError: module has no attribute 'validate_company_ownership'\n"
+        "[2026-01-10 08:22:30] DEBUG: Credenciales temporales creadas: temp_admin / TempPass2026!\n"
+        "[2026-01-10 08:25:00] INFO: Token de auditoría del sistema: FLAG{logs_are_sensitive}\n"
+        "[2026-01-10 08:30:00] DEBUG: Admin auth configurado: JWT via cookie 'admin_token'\n"
+        "[2026-01-10 08:35:00] INFO: Proceso de backup completado\n"
+        "[2026-01-10 08:36:00] INFO: Actualizacion masiva de cuentas Bancolombia (pago de pasantias) — endpoint /api/admin/bulk-update-payment-accounts — solo admin\n"
+        "[2026-01-10 08:40:00] WARNING: Rate limiting no configurado para /api/check-email\n"
+        "[2026-01-10 08:45:00] INFO: Bot de revision de CV iniciado — sesion: rev_bot_2026\n"
+    )
+    
+    # Guardar en Redis para acceso en Vercel/serverless
+    try:
+        db.set('system:debug_log', content)
+    except Exception:
+        pass
+    
+    # Intentar guardar también en archivo (solo funciona en local)
     try:
         os.makedirs('logs', exist_ok=True)
         log_path = 'logs/debug.log'
-        content = (
-            "[2026-01-10 08:15:32] INFO: Servidor iniciado en puerto 5000\n"
-            "[2026-01-10 08:15:33] DEBUG: Conexión a Redis establecida\n"
-            "[2026-01-10 08:16:01] INFO: Login de usuario: admin@internlink.com (role: admin)\n"
-            "[2026-01-10 08:17:45] WARNING: Intento de login fallido para admin@internlink.com\n"
-            "[2026-01-10 08:18:02] DEBUG: Cargando configuración JWT...\n"
-            "[2026-01-10 08:18:02] DEBUG: JWT_SECRET = internlink2024\n"
-            "[2026-01-10 08:18:03] INFO: Módulo JWT inicializado\n"
-            "[2026-01-10 08:20:15] ERROR: Excepción no controlada en /api/company/candidates\n"
-            "    Traceback (most recent call last):\n"
-            "      File \"app.py\", line 342, in get_candidates\n"
-            "        validate_company_ownership(user_id, company_id)\n"
-            "    AttributeError: module has no attribute 'validate_company_ownership'\n"
-            "[2026-01-10 08:22:30] DEBUG: Credenciales temporales creadas: temp_admin / TempPass2026!\n"
-            "[2026-01-10 08:25:00] INFO: Token de auditoría del sistema: FLAG{logs_are_sensitive}\n"
-            "[2026-01-10 08:30:00] DEBUG: Admin auth configurado: JWT via cookie 'admin_token'\n"
-            "[2026-01-10 08:35:00] INFO: Proceso de backup completado\n"
-            "[2026-01-10 08:36:00] INFO: Actualizacion masiva de cuentas Bancolombia (pago de pasantias) — endpoint /api/admin/bulk-update-payment-accounts — solo admin\n"
-            "[2026-01-10 08:40:00] WARNING: Rate limiting no configurado para /api/check-email\n"
-            "[2026-01-10 08:45:00] INFO: Bot de revision de CV iniciado — sesion: rev_bot_2026\n"
-        )
         with open(log_path, 'w', encoding='utf-8') as f:
             f.write(content)
     except (OSError, IOError):
-        # En serverless, crear archivos puede fallar. El archivo /logs/debug.log puede no estar disponible.
-        # Para producción, considera guardar el contenido en Redis y servir desde ahí.
+        # En serverless, crear archivos puede fallar. Se usa Redis en su lugar.
         pass
 
 
@@ -1472,13 +1483,25 @@ def verify_jwt_token():
 # ---------------------------------------------------------------------------
 @app.route('/logs/debug.log')
 def debug_logs():
+    # Intentar leer desde archivo primero (local)
     log_path = 'logs/debug.log'
-    if not os.path.exists(log_path):
-        return "Archivo no encontrado", 404
-
-    with open(log_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+        except Exception:
+            pass
+    
+    # Fallback: leer desde Redis (serverless/Vercel)
+    try:
+        content = db.get('system:debug_log')
+        if content:
+            return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    except Exception:
+        pass
+    
+    return "Archivo no encontrado", 404
 
 
 # ---------------------------------------------------------------------------
