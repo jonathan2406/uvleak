@@ -11,7 +11,8 @@ import jwt
 import sys
 import json
 
-DEFAULT_PAYLOAD = {"user_id": "1", "email": "admin@internlink.com", "role": "admin"}
+# Payload con email genérico: reemplazar por la cuenta del admin (inferir de GET /api/check-email)
+DEFAULT_PAYLOAD = {"user_id": "1", "email": "usuario@mail.com", "role": "admin"}
 
 
 def create_token(secret, payload=None):

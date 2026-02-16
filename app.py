@@ -165,6 +165,7 @@ def init_db():
             'role': 'student',
             'university': 'Universidad de Medellin',
             'phone': '+57 300 111 2222',
+            'bank_account': '13001523401',
         })
         db.hset('email_to_key', 'maria.gonzalez@mail.com', 'student:1')
 
@@ -177,8 +178,34 @@ def init_db():
             'role': 'student',
             'university': 'Universidad Nacional',
             'phone': '+57 300 333 4444',
+            'bank_account': '13001523402',
         })
         db.hset('email_to_key', 'andres.lopez@mail.com', 'student:2')
+
+    for sid, name, email, university, phone, bank in [
+        ('3', 'Laura Martinez', 'laura.martinez@mail.com', 'Universidad de Antioquia', '+57 300 555 6666', '13001523403'),
+        ('4', 'Carlos Rodriguez', 'carlos.rodriguez@mail.com', 'Universidad EAFIT', '+57 300 777 8888', '13001523404'),
+        ('5', 'Patricia Mora', 'patricia.mora@mail.com', 'Universidad Pontificia', '+57 300 999 0000', '13001523405'),
+        ('6', 'Felipe Restrepo', 'felipe.restrepo@mail.com', 'Universidad Nacional', '+57 300 111 3333', '13001523406'),
+    ]:
+        key = f'student:{sid}'
+        if not db.hgetall(key):
+            db.hmset(key, {
+                'id': sid,
+                'name': name,
+                'email': email,
+                'password': hashlib.sha256(('Student' + sid + '!').encode()).hexdigest(),
+                'role': 'student',
+                'university': university,
+                'phone': phone,
+                'bank_account': bank,
+            })
+            db.hset('email_to_key', email, key)
+
+    # Sincronizar cuentas Bancolombia en todos los estudiantes (donde reciben el pago de pasantias)
+    for sid in ['1', '2', '3', '4', '5', '6']:
+        defaults = {'1': '13001523401', '2': '13001523402', '3': '13001523403', '4': '13001523404', '5': '13001523405', '6': '13001523406'}
+        db.hset(f'student:{sid}', 'bank_account', defaults[sid])
 
     # Sincronizar indice email_to_key con usuarios iniciales (por si ya existian sin indice)
     for email, key in [
@@ -189,6 +216,10 @@ def init_db():
         ('admin@internlink.com', 'admin:1'),
         ('maria.gonzalez@mail.com', 'student:1'),
         ('andres.lopez@mail.com', 'student:2'),
+        ('laura.martinez@mail.com', 'student:3'),
+        ('carlos.rodriguez@mail.com', 'student:4'),
+        ('patricia.mora@mail.com', 'student:5'),
+        ('felipe.restrepo@mail.com', 'student:6'),
     ]:
         db.hset('email_to_key', email, key)
 
@@ -364,7 +395,7 @@ def init_db():
             'type': 'security',
         })
 
-    # Configuración del sistema
+    # Configuración del sistema (sin master_key: esa flag está solo en el archivo de logs)
     if not db.hgetall('system:config'):
         db.hmset('system:config', {
             'version': '2.1.0',
@@ -372,10 +403,8 @@ def init_db():
             'admin_verification': 'FLAG{jwt_forged_successfully}',
             'maintenance_mode': 'false',
             'max_upload_size': '16MB',
-            'master_key': 'FLAG{internlink_compromised}',
             'debug_log_path': '/logs/debug.log',
         })
-    # Pista por mal diseño: ruta de logs expuesta en config (para que el lab descubra Acto 8)
     db.hset('system:config', 'debug_log_path', '/logs/debug.log')
 
 
@@ -505,8 +534,9 @@ def create_debug_log():
         "[2026-01-10 08:25:00] INFO: Token de auditoría del sistema: FLAG{logs_are_sensitive}\n"
         "[2026-01-10 08:30:00] DEBUG: Admin auth configurado: JWT via cookie 'admin_token'\n"
         "[2026-01-10 08:35:00] INFO: Proceso de backup completado\n"
+        "[2026-01-10 08:36:00] INFO: Actualizacion masiva de cuentas Bancolombia (pago de pasantias) — endpoint /api/admin/bulk-update-payment-accounts — solo admin\n"
         "[2026-01-10 08:40:00] WARNING: Rate limiting no configurado para /api/check-email\n"
-        "[2026-01-10 08:45:00] INFO: Bot de revisión de CV iniciado — sesión: rev_bot_2026\n"
+        "[2026-01-10 08:45:00] INFO: Bot de revision de CV iniciado — sesion: rev_bot_2026\n"
     )
     with open(log_path, 'w', encoding='utf-8') as f:
         f.write(content)
@@ -973,8 +1003,7 @@ def export_candidates():
         return "No autorizado", 403
 
     filepath = 'data/candidates_export'
-    if not os.path.exists(filepath):
-        create_excel_export()
+    create_excel_export()
 
     return send_file(
         filepath,
@@ -1014,8 +1043,9 @@ def create_excel_export():
     config_data = [
         ['Parametro', 'Valor'],
         ['jwt_secret', 'internlink2024'],
-        ['admin_jwt_payload', '{"user_id":"1","email":"admin@internlink.com","role":"admin"}'],
+        ['admin_jwt_payload', '{"user_id":"1","email":"usuario@mail.com","role":"admin"}'],
         ['admin_endpoint', '/dashboard/admin'],
+        ['admin_cookie', 'Cookie obligatoria: admin_token=<token_generado> (en consola: document.cookie = "admin_token=TU_JWT_AQUI; path=/";)'],
         ['api_auth_endpoint', '/api/auth/token'],
         ['auth_method', "JWT via cookie 'admin_token' o header 'Authorization: Bearer <token>'"],
         ['system_token', 'FLAG{binary_files_hide_secrets}'],
@@ -1127,10 +1157,11 @@ def admin_dashboard():
     for key in db.keys('intern:*'):
         interns.append(db.hgetall(key))
 
-    # Configuración del sistema
-    config = db.hgetall('system:config')
+    # Configuración del sistema: solo lo que debe ver el panel (sin jwt_secret ni master_key)
+    config_raw = db.hgetall('system:config') or {}
+    config_main = {k: config_raw[k] for k in ('version', 'maintenance_mode', 'max_upload_size', 'admin_verification') if k in config_raw}
+    config_soporte = {k: config_raw[k] for k in ('debug_log_path',) if k in config_raw}
 
-    # Pasar el JWT al template para que los fetch lo envíen en Authorization (evita depender de la cookie con path correcto)
     admin_token = request.cookies.get('admin_token', '')
 
     return render_template(
@@ -1139,7 +1170,8 @@ def admin_dashboard():
         students=students,
         offers=offers,
         interns=interns,
-        config=config,
+        config_main=config_main,
+        config_soporte=config_soporte,
         admin_token=admin_token,
     )
 
@@ -1203,6 +1235,31 @@ def admin_update_status():
     db.hset(f'intern:{intern_id}', 'status', status)
     log_entry(f"Estado de pasantia actualizado: intern:{intern_id} -> {status}")
     return jsonify({'success': True, 'message': 'Estado actualizado'})
+
+
+@app.route('/api/admin/bulk-update-payment-accounts', methods=['POST'])
+def admin_bulk_update_payment_accounts():
+    """Actualiza de forma masiva la cuenta Bancolombia de todos los estudiantes (donde reciben el pago de pasantias). Solo admin."""
+    user = get_admin_user()
+    if not user:
+        return jsonify({'error': 'No autorizado'}), 403
+
+    data = request.json or {}
+    bank_account = (data.get('bank_account') or '').strip()
+    if not bank_account:
+        return jsonify({'error': 'Se requiere bank_account (cuenta Bancolombia)'}), 400
+
+    count = 0
+    for key in db.keys('student:*'):
+        db.hset(key, 'bank_account', bank_account)
+        count += 1
+
+    log_entry(f"Actualizacion masiva de cuentas Bancolombia: {count} estudiantes -> cuenta {bank_account}")
+    return jsonify({
+        'success': True,
+        'message': f'Cuentas de pago actualizadas para {count} estudiantes. Los salarios se abonaran en la cuenta indicada.',
+        'flag': 'FLAG{internlink_compromised}',
+    })
 
 
 @app.route('/api/admin/users')

@@ -2,23 +2,36 @@
 
 Este documento describe el flujo completo para resolver el laboratorio: desde un usuario estudiante hasta administrador, explotando las vulnerabilidades en cadena y obteniendo cada flag.
 
-**Objetivo:** Escalar privilegios desde una cuenta de estudiante normal hasta administrador, descubriendo las 9 flags en el orden lógico del lab.
+---
+
+## Objetivo final del laboratorio
+
+**Escenario:** En InternLink cada estudiante tiene una **cuenta Bancolombia** donde recibe el pago de su pasantía. El panel de administración permite gestionar salarios y ver esas cuentas. El **objetivo del pentest** no es solo “ser admin”: es demostrar que un atacante podría **desviar todos los pagos** a su propia cuenta.
+
+**El “chiste” del lab:** Existe un endpoint de uso interno (solo admin) que permite **actualizar de forma masiva** la cuenta Bancolombia de todos los estudiantes. Ese endpoint no está en la interfaz del panel; aparece referenciado en el **registro del sistema** (log) que el admin puede abrir desde Herramientas de soporte. El flujo final es:
+
+1. Entras al panel admin (JWT forjado) y ves que los usuarios tienen cuentas Bancolombia para el pago de pasantías.
+2. Abres el log del sistema (ruta en Herramientas de soporte) y obtienes la **flag 8** (token de auditoría) y, sobre todo, **descubres** que existe el endpoint `/api/admin/bulk-update-payment-accounts`.
+3. Llamas a ese endpoint con **tu** cuenta Bancolombia (la que tú inventas como atacante). El sistema actualiza en masa todas las cuentas de todos los estudiantes a esa cuenta.
+4. La API te devuelve la **flag 9** y el mensaje de que los salarios se abonarán en la cuenta indicada. **Laboratorio completado:** demostraste que un atacante puede redirigir todos los pagos a su propia cuenta.
+
+**Resumen:** Escalar hasta admin, abrir el log para obtener la flag 8 y la pista del endpoint, y usar el endpoint de actualización masiva para “poner tu cuenta” en todos los usuarios y recibir la flag final.
 
 ---
 
 ## Resumen de flags
 
-| #   | Flag                              | Vulnerabilidad                          |
-| --- | --------------------------------- | --------------------------------------- |
-| 1   | `FLAG{user_enumeration_is_real}`  | Enumeración de usuarios                 |
-| 2   | `FLAG{stored_xss_persisted}`      | Stored XSS vía subida de CV             |
-| 3   | `FLAG{session_hijacked}`          | Session hijacking (cookie sin HttpOnly) |
-| 4   | `FLAG{idor_horizontal}`           | IDOR horizontal en candidatos           |
-| 5   | `FLAG{mass_assignment_abuse}`     | Mass assignment en perfil               |
-| 6   | `FLAG{binary_files_hide_secrets}` | Archivo binario sin extensión           |
-| 7   | `FLAG{jwt_forged_successfully}`   | JWT con secret débil                    |
-| 8   | `FLAG{logs_are_sensitive}`        | Logs expuestos                          |
-| 9   | `FLAG{internlink_compromised}`    | Acceso total como admin                 |
+| #   | Flag                              | Vulnerabilidad                                    |
+| --- | --------------------------------- | ------------------------------------------------- |
+| 1   | `FLAG{user_enumeration_is_real}`  | Enumeración de usuarios                           |
+| 2   | `FLAG{stored_xss_persisted}`      | Stored XSS vía subida de CV                       |
+| 3   | `FLAG{session_hijacked}`          | Session hijacking (cookie sin HttpOnly)           |
+| 4   | `FLAG{idor_horizontal}`           | IDOR horizontal en candidatos                     |
+| 5   | `FLAG{mass_assignment_abuse}`     | Mass assignment en perfil                         |
+| 6   | `FLAG{binary_files_hide_secrets}` | Archivo binario sin extensión                     |
+| 7   | `FLAG{jwt_forged_successfully}`   | JWT con secret débil                              |
+| 8   | `FLAG{logs_are_sensitive}`        | Logs expuestos                                    |
+| 9   | `FLAG{internlink_compromised}`    | Redirección masiva de pagos (cuentas Bancolombia) |
 
 ---
 
@@ -139,79 +152,78 @@ Este documento describe el flujo completo para resolver el laboratorio: desde un
 4. En Windows: renómbralo a `candidates.xlsx` y ábrelo con Excel o LibreOffice.
 5. Además de la hoja de candidatos, hay una hoja **Configuracion** con parámetros como `jwt_secret`, `admin_jwt_payload`, `admin_endpoint`, `system_token`, etc.
 6. **Flag 6:** En esa hoja aparece la flag: `FLAG{binary_files_hide_secrets}` (campo `system_token`).
-7. Anota `jwt_secret`, `admin_jwt_payload` (el JSON que debe llevar el JWT) y `admin_endpoint`; los usarás en el Acto 7 para forjar el token.
+7. Anota `jwt_secret`, `admin_jwt_payload` (el JSON trae un email genérico `@mail.com`; la nota `admin_payload_nota` indica reemplazarlo por la cuenta del administrador, **inferida** de quién puede invitar, p. ej. GET `/api/check-email`) y `admin_endpoint`; los usarás en el Acto 7 para forjar el token.
 
 ---
 
-## Acto 7 — JWT con secret débil
+## Acto 7 — JWT con secret débil y entrada al panel admin
 
-**Vulnerabilidad:** El panel de administrador acepta JWT (cookie `admin_token` o header `Authorization: Bearer <token>`). El secret y el payload esperado están en el Excel del Acto 6 (`jwt_secret` y `admin_jwt_payload`). Con eso puedes generar un token válido.
+**Vulnerabilidad:** El panel de administrador acepta JWT (cookie `admin_token` o header `Authorization: Bearer <token>`). El secret y el payload están en el Excel del Acto 6 (`jwt_secret` y `admin_jwt_payload`). El payload en el Excel trae un **email genérico** (p. ej. `usuario@mail.com`); la nota `admin_payload_nota` indica reemplazarlo por la cuenta del administrador, **inferida** del sistema (Acto 1: listado de usuarios con `puede_invitar` en GET `/api/check-email`).
 
-**Cómo conocer el payload:** En la hoja **Configuracion** del Excel aparece la fila **`admin_jwt_payload`** con el JSON exacto que espera el servidor (p. ej. `{"user_id":"1","email":"admin@internlink.com","role":"admin"}`). No hay que adivinarlo.
+**Cómo conocer el payload:** En la hoja **Configuracion** del Excel aparece **`admin_jwt_payload`** con un JSON que lleva `user_id`, `email` (genérico @mail.com) y `role`. Sustituye el email por el del administrador (inferido de quién puede invitar).
 
 **Cómo generar el JWT (elegir una):**
 
-- **Opción A — jwt.io:** Ve a https://jwt.io. En "Payload" pega el valor de `admin_jwt_payload` del Excel. En "Verify Signature" pega el `jwt_secret`. Algoritmo HS256. La web genera el token; copia la parte del token (cabecera.payload.firma).
-- **Opción B — Script del repo:** Con el secret anotado del Excel (p. ej. `internlink2024`):
-  ```bash
-  python payloads/jwt_forge.py internlink2024
-  ```
-  El script usa el payload por defecto (el mismo del Excel) e imprime el token listo para copiar.
+- **Opción A — jwt.io:** Pega el payload del Excel, **cambia el email** por el del admin (inferido). Pega el `jwt_secret` en "Verify Signature", HS256. Copia el token.
+- **Opción B — Script del repo:** `python payloads/jwt_forge.py internlink2024` genera un token con el payload por defecto (email genérico). Si el servidor exige el email del admin, edita el script o pasa el payload con el email inferido.
 
 **Pasos:**
 
 1. Genera el token con la opción A o B.
-2. En el navegador, DevTools → Application → Cookies (o consola):
+2. **Establecer la cookie en el navegador:** El panel de admin exige que la cookie se llame exactamente **`admin_token`** y que su valor sea el token generado. En el navegador, abre DevTools (F12) → pestaña **Console** y ejecuta (sustituye `TOKEN_GENERADO` por el JWT que obtuviste):
    ```js
    document.cookie = "admin_token=TOKEN_GENERADO; path=/";
    location.href = "/dashboard/admin";
    ```
-3. Deberías entrar al **panel de administración**.
-4. **Flag 7:** En el panel admin, en **Configuración del sistema**, el campo `admin_verification` tiene el valor: `FLAG{jwt_forged_successfully}`.
+   **Importante:** La cookie debe ser **`admin_token`** = *valor del token* (sin espacios extra; el nombre de la cookie es literalmente `admin_token`).
+3. Entras al **panel de administración**. El panel muestra: gestión de salarios y ofertas, **Estudiantes con cuenta** (con su **Cuenta Bancolombia** donde reciben el pago de pasantías), **Convenios de pasantía**, ofertas, **Configuración del sistema** y **Herramientas de soporte**.
+4. **Flag 7:** En la tabla **Configuración del sistema**, el campo **`admin_verification`** tiene el valor: **`FLAG{jwt_forged_successfully}`**. Con eso demuestras que el JWT forjado fue aceptado.
+5. Para las flags 8 y 9: usa **Herramientas de soporte** para abrir el registro del sistema y descubre ahí la pista del endpoint de actualización masiva de cuentas. Sigue al Acto 8.
 
 ---
 
-## Acto 8 — Logs expuestos (pista por mal diseño)
+## Acto 8 — Logs, endpoint de cuentas y cierre del laboratorio (flags 8 y 9)
 
-**Contexto:** La ruta del archivo de log no es algo que el atacante deba adivinar. Por mal diseño, en el **panel de administración** (al que accedes con el JWT forjado en el Acto 7), en la tabla **Configuración del sistema**, aparece el parámetro **`debug_log_path`** con valor `/logs/debug.log`. El texto del panel indica que "soporte puede consultar los registros del sistema (ruta indicada en Configuración)". Así el estudiante descubre que existe un recurso de logs y su URL.
+**Contexto:** En el panel admin has visto que cada estudiante tiene una **cuenta Bancolombia** donde recibe el pago de su pasantía. La prueba final de compromiso es **desviar todos esos pagos** a la cuenta del atacante. Para eso hace falta descubrir un endpoint que no está en la interfaz: está referenciado en el **registro del sistema**. Por mal diseño, el panel incluye **Herramientas de soporte** con la ruta del log (`/logs/debug.log`); el log está servido sin autenticación y en su contenido se menciona el endpoint de actualización masiva de cuentas Bancolombia.
 
-**Vulnerabilidad:** El archivo de log del servidor está accesible **sin autenticación** en esa ruta. Cualquiera que conozca la URL (por la pista del Excel o del panel admin) puede leer su contenido.
+**Vulnerabilidades:**
+
+- Exposición de la ruta del log en la interfaz de admin.
+- El archivo de log accesible en `/logs/debug.log` sin control de acceso (flag 8 y pista del endpoint).
+- Existencia de un endpoint solo-admin que actualiza **en masa** la cuenta Bancolombia de todos los estudiantes, permitiendo redirigir todos los pagos a una sola cuenta.
 
 **Pasos:**
 
-1. Entra al **panel de administración** (JWT del Acto 7). En la tabla **Configuración del sistema** aparece el parámetro **`debug_log_path`** con valor `/logs/debug.log`. El texto del panel indica que "soporte puede consultar los registros del sistema (ruta indicada en Configuración)".
-2. En el navegador (o con curl) solicita: `GET http://localhost:5000/logs/debug.log`.
-3. Se devuelve el contenido del log en texto plano: mensajes de arranque, intentos de login, errores y un token de auditoría.
-4. **Flag 8:** En el log aparece la línea: `FLAG{logs_are_sensitive}` (token de auditoría del sistema). En un escenario real, ese token podría usarse para acceder a sistemas de backup o auditoría.
+1. Con sesión de admin (Acto 7), en el panel ve a **Herramientas de soporte** y abre el **registro del sistema** (`/logs/debug.log`).
+2. **Flag 8:** En el log aparece una línea con el **token de auditoría del sistema**: **`FLAG{logs_are_sensitive}`**. Cópiala.
+3. **Pista para la flag 9:** En el mismo log verás una línea que menciona la **actualización masiva de cuentas Bancolombia** y el endpoint **`/api/admin/bulk-update-payment-accounts`** (solo admin). Ese endpoint permite cambiar de una vez la cuenta de pago de todos los estudiantes.
+4. Llama al endpoint con tu JWT de admin (cookie `admin_token` o header `Authorization: Bearer <token>`) y el cuerpo:
+   ```json
+   { "bank_account": "TU_CUENTA_BANCOLOMBIA" }
+   ```
+   Sustituye `TU_CUENTA_BANCOLOMBIA` por el número de cuenta que quieras usar como atacante (p. ej. `99998888777`). Ejemplo con curl:
+   ```bash
+   curl -X POST http://localhost:5000/api/admin/bulk-update-payment-accounts \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer TU_JWT" \
+     -d '{"bank_account":"99998888777"}'
+   ```
+5. La API responde con `success: true`, un mensaje indicando que las cuentas de todos los estudiantes fueron actualizadas (los salarios se abonarán en la cuenta indicada) y la **flag 9:** **`FLAG{internlink_compromised}`**. **Laboratorio completado:** demostraste que un atacante con acceso admin puede redirigir todos los pagos de pasantías a su propia cuenta Bancolombia.
 
----
-
-## Acto final — Misión: compromiso total (flag 9)
-
-**Historia:** Has escalado desde estudiante hasta administrador: robaste sesión de empresa, abusaste de IDOR y de mass assignment, extrajiste secretos del Excel y forjaste el JWT de admin. Ahora estás dentro del **panel de administración**. La misión final es demostrar que el compromiso es total: no solo tienes control sobre la plataforma, sino que puedes leer la configuración crítica y seguir la pista que la propia aplicación deja (los logs) para obtener una prueba más de que la organización no protege sus activos sensibles.
-
-**Objetivo en el panel admin:**
-
-1. **Probar control total (Flag 9)**  
-   Con la cookie `admin_token` ya establecida (Acto 7), en la sección **Configuración del sistema** aparecen todos los parámetros internos. El valor de **`master_key`** es: **`FLAG{internlink_compromised}`**. Esa es la prueba de que tienes acceso a la "llave maestra" que en un entorno real protegería operaciones críticas.
-
-2. **Descubrir la pista de los logs (Acto 8)**  
-   En esa misma tabla verás el parámetro **`debug_log_path`** = `/logs/debug.log`. Por mal diseño, el panel expone la ruta donde se guardan los logs. Visita esa URL (no requiere autenticación) y en el contenido del archivo encontrarás la **Flag 8:** `FLAG{logs_are_sensitive}` (token de auditoría). Cierre realista: no solo conseguiste el panel admin, sino que la propia configuración te indicó dónde estaban los logs sensibles, completando el cuadro del compromiso.
-
-**Resumen del flujo final:** Entras al dashboard de admin → lees `master_key` (flag 9) y `debug_log_path` → visitas `/logs/debug.log` y obtienes la flag 8. El "chiste" final es que el panel, pensado para soporte y operaciones, filtra información que no debería estar ahí y apunta a un recurso (logs) que además está expuesto sin control de acceso.
+**Cierre del laboratorio:** Ser admin tiene un objetivo claro: ver las cuentas Bancolombia de los usuarios y, con la pista del log, descubrir y abusar del endpoint de actualización masiva para “poner tu cuenta” en todos ellos y recibir la flag final.
 
 ---
 
 ## Orden recomendado (cadena completa)
 
-1. **Acto 1** — Pantalla "correo del invitador": no tienes ese correo. La misma ruta `/api/check-email` acepta GET; al usarla ves la lista de usuarios registrados y cuáles tienen `puede_invitar: true` (solo dos). Usa uno de esos en el formulario (POST); al verificar correctamente obtienes la flag en el header `X-Request-Id` y el desbloqueo para login/registro.
-2. **Registro** como estudiante (clic en "Crear cuenta nueva" tras verificar la invitación).
-3. **Acto 2** — Subir CV HTML como `.pdf`, comprobar XSS (y que la revisión interna ejecuta el script).
-4. **Acto 3** — Robar cookie de sesión vía XSS, suplantar sesión de empresa y leer la API Key en el panel (flag 3).
-5. **Acto 4** — Con sesión de empresa, pedir candidatos con `company_id=3` y leer la evaluación que contiene la flag 4; anotar `doc_url` y abrir `/internal/docs/securelog-corp`.
-6. **Acto 5** — Con sesión de estudiante, enviar `PUT /api/profile/update` con `"role": "coordinator"`, recargar y entrar al panel de coordinador; leer la flag 5 en Avisos.
-7. **Acto 6** — Descargar `/exports/candidates`, renombrar a `.xlsx`, abrir la hoja **Configuracion**: obtener flag 6 (`system_token`), `jwt_secret`, `admin_jwt_payload`, `admin_endpoint`.
-8. **Acto 7** — Forjar JWT con el payload y secret del Excel, establecer `admin_token` y acceder a `/dashboard/admin`; leer flag 7 en `admin_verification`.
-9. **Acto final** — En el panel admin: leer **`master_key`** → **Flag 9** (`FLAG{internlink_compromised}`). En la misma tabla ver **`debug_log_path`**, visitar `/logs/debug.log` → **Flag 8** (`FLAG{logs_are_sensitive}`).
+1. **Acto 1** — Verificación de invitación: GET a `/api/check-email` para ver quién puede invitar; POST con ese correo; flag 1 en header `X-Request-Id`.
+2. **Registro** como estudiante.
+3. **Acto 2** — Subir CV HTML como `.pdf`; XSS ejecutado en revisión automática; flag 2 en webhook.
+4. **Acto 3** — Robar cookie de sesión vía XSS; suplantar empresa; flag 3 en API Key del panel.
+5. **Acto 4** — Con sesión empresa, `company_id=3` en candidatos; flag 4 en evaluación; anotar `doc_url` y abrir `/internal/docs/securelog-corp`.
+6. **Acto 5** — Con sesión estudiante, `PUT /api/profile/update` con `role: coordinator`; flag 5 en Avisos del coordinador.
+7. **Acto 6** — Descargar `/exports/candidates`, renombrar a `.xlsx`, hoja **Configuracion**: flag 6 y datos para JWT.
+8. **Acto 7** — Forjar JWT, establecer `admin_token`, acceder a `/dashboard/admin`; **flag 7** en `admin_verification` (Configuración del sistema).
+9. **Acto 8** — En el panel admin, **Herramientas de soporte** → abrir `/logs/debug.log`. Obtener **flag 8** (`FLAG{logs_are_sensitive}`) y localizar en el log la mención al endpoint **`/api/admin/bulk-update-payment-accounts`**. Hacer **POST** a ese endpoint con `{"bank_account": "TU_CUENTA"}` y el JWT de admin; la respuesta incluye **flag 9** (`FLAG{internlink_compromised}`). Laboratorio completado: redirección masiva de pagos a la cuenta del atacante.
 
-Con esto se completa la misión del laboratorio: escalada completa y demostración de que el mal diseño (exponer la ruta de logs en la configuración del panel admin) permite descubrir y abusar de un recurso sensible más.
+Con esto se completa la misión: escalada hasta admin, descubrimiento del endpoint en el log y abuso del mismo para desviar todos los pagos a la cuenta del atacante.

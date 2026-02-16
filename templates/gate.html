@@ -35,6 +35,9 @@ block body %}
         Para acceder a InternLink debe ingresar el correo electrónico de la
         persona que lo invitó a la plataforma.
       </p>
+      <p class="text-muted" style="font-size: 0.85rem; margin-top: 0.5rem;">
+        <strong>Laboratorio de seguridad.</strong> Objetivo del ejercicio: demostrar el compromiso total de la plataforma y recuperar la evidencia crítica que el cliente ha identificado (consulte el enunciado del lab).
+      </p>
 
       {% if request.args.get('msg') == 'verify_first' %}
       <div id="gateVerifyFirstWarning" class="alert alert-warning">
