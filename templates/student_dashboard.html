@@ -28,16 +28,23 @@
                     <h3>Subir Currículum Vitae</h3>
                 </div>
                 <div class="card-body">
-                    <p>Sube tu CV en formato PDF para que las empresas puedan revisarlo.</p>
+                    <p style="color: #64748b; margin-bottom: 1.5rem; line-height: 1.6;">Sube tu CV en formato PDF para que las empresas puedan revisarlo.</p>
                     <form id="uploadCvForm" enctype="multipart/form-data">
                         <div class="form-group">
                             <input type="file" id="cvFile" name="cv" accept=".pdf" class="form-input">
-                            <small class="form-hint">Formato permitido: PDF (máx. 16 MB)</small>
+                            <small class="form-hint" style="color: #94a3b8; font-size: 0.85rem;">Formato permitido: PDF (máx. 16 MB)</small>
                         </div>
-                        <button type="submit" class="btn btn-primary">Subir CV</button>
+                        <button type="submit" class="btn btn-primary btn-block">Subir CV</button>
                     </form>
-                    <div id="cvCurrent" class="mt-2">
-                        <small>CV actual: {% if user.cv_path %}<a href="/view-cv/{{ user.cv_path }}" target="_blank">{{ user.cv_path }}</a>{% else %}—{% endif %}</small>
+                    <div id="cvCurrent" class="mt-2" style="padding-top: 1rem; margin-top: 1rem; border-top: 1px solid #e2e8f0;">
+                        <small style="color: #64748b; font-size: 0.875rem;">
+                            <strong style="color: #475569;">CV actual:</strong> 
+                            {% if user.cv_path %}
+                                <a href="/view-cv/{{ user.cv_path }}" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 500;">{{ user.cv_filename or user.cv_path }}</a>
+                            {% else %}
+                                <span style="color: #94a3b8;">Ningún archivo subido</span>
+                            {% endif %}
+                        </small>
                     </div>
                     <div id="uploadStatus" class="mt-2"></div>
                 </div>
@@ -82,9 +89,10 @@
                     <ul class="list">
                         {% for offer in offers %}
                         <li>
-                            <strong>{{ offer.title }}</strong> — {{ offer.company_name }}<br>
-                            <small>{{ offer.description }}</small><br>
-                            <small class="text-muted">Salario: ${{ offer.salary }} COP</small>
+                            <strong>{{ offer.title }}</strong>
+                            <span style="color: #64748b; font-weight: 500; font-size: 0.9rem;">— {{ offer.company_name }}</span>
+                            <small style="display: block; margin-top: 0.75rem; color: #475569; line-height: 1.6;">{{ offer.description }}</small>
+                            <small class="text-muted" style="display: block; margin-top: 0.75rem; font-weight: 600; color: #6366f1;">Salario: ${{ offer.salary }} COP</small>
                         </li>
                         {% endfor %}
                     </ul>
