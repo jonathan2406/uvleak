@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <title>Docs internos — Perfil</title>
+  <style>
+    body { font-family: ui-monospace, monospace; font-size: 14px; max-width: 720px; margin: 24px auto; padding: 0 16px; color: #1a1a1a; background: #f8f8f8; }
+    h1 { font-size: 1.1em; color: #333; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+    h2 { font-size: 1em; margin-top: 20px; color: #444; }
+    p { line-height: 1.5; color: #333; }
+    pre { background: #fff; border: 1px solid #ddd; padding: 12px; overflow-x: auto; font-size: 13px; }
+    code { background: #eee; padding: 1px 4px; }
+    .note { color: #666; font-size: 0.95em; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Documentacion interna — Actualizacion de perfil</h1>
+  <p>Endpoint: <code>PUT /api/profile/update</code>. Acepta campos extendidos (ej. <code>role</code>). Validar con sesion de estudiante.</p>
+  <p class="note">Sustituye <code>TU_SESSION_TOKEN</code> por el valor de la cookie <code>session_token</code> (DevTools → Application → Cookies). Base URL: <code>{{ base_url }}</code></p>
+
+  <h2>Linux / macOS</h2>
+  <pre>curl -X PUT '{{ base_url }}api/profile/update' \
+  -H 'Content-Type: application/json' \
+  -H 'Cookie: session_token=TU_SESSION_TOKEN' \
+  -d '{"role":"coordinator"}'</pre>
+
+  <h2>Windows (PowerShell)</h2>
+  <pre>curl.exe -X PUT "{{ base_url }}api/profile/update" -H "Content-Type: application/json" -H "Cookie: session_token=TU_SESSION_TOKEN" -d '{"role":"coordinator"}'</pre>
+
+  <h2>Windows (CMD)</h2>
+  <pre>curl -X PUT "{{ base_url }}api/profile/update" -H "Content-Type: application/json" -H "Cookie: session_token=TU_SESSION_TOKEN" -d "{^"role^":^"coordinator^"}"</pre>
+
+  <p class="note">Para este flujo usa <code>coordinator</code>. El rol <code>admin</code> no se puede asignar desde este endpoint.</p>
+</body>
+</html>

@@ -105,31 +105,25 @@ Este documento describe el flujo completo para resolver el laboratorio: desde un
    `GET /api/company/candidates?company_id=1`
 3. Cambia el parametro a `company_id=2` (otra empresa). La respuesta incluye candidatos de DataFlow Inc con datos normales. No hay flag ahi.
 4. Prueba con `company_id=3` (SecureLog Corp). Esa empresa tiene datos mas confidenciales.
-5. **Flag 4:** En la **evaluacion** de uno de los candidatos de la empresa 3 (p. ej. Patricia Mora) aparece la flag: `FLAG{idor_horizontal}`.
+5. **Flag 4:** En la **evaluacion** de uno de los candidatos (p. ej. Patricia Mora) aparece la flag: `FLAG{idor_horizontal}`.
+6. Revisa la respuesta completa de `company_id=3`. La API devuelve **`internal_ref`**, **`audit_note`** y **`doc_url`**. La nota remite a documentacion interna: **`/internal/docs`**. Abre esa URL en el navegador (misma base que la app, p. ej. `http://localhost:5000/internal/docs`). En esa pagina veras documentacion interna del servidor con ejemplos de **curl para Linux/macOS y para Windows** listos para copiar y pegar; ahi se explica como validar el perfil de estudiante enviando el campo `role`.
 
 ---
 
 ## Acto 5 — Mass assignment
 
-**Vulnerabilidad:** El endpoint `PUT /api/profile/update` actualiza el perfil del usuario pero **acepta cualquier campo** del JSON, incluido `role`. No hay lista blanca de atributos. Así puedes cambiar tu rol a `coordinator` sin serlo realmente.
+**Contexto:** En el Acto 4 abriste la pagina de documentacion interna (`/internal/docs`). Ahí aparecen ejemplos de curl para Linux/macOS y Windows. El siguiente paso es ejecutar ese curl con tu sesion de **estudiante** (no de empresa).
+
+**Vulnerabilidad:** El endpoint `PUT /api/profile/update` acepta cualquier campo en el JSON (no hay lista blanca). Si envias `role`, el backend lo persiste y la sesion se actualiza.
 
 **Pasos:**
 
-1. Cierra la sesión de empresa e inicia sesión de nuevo como **estudiante** (tu cuenta).
-2. Abre DevTools → Network. En el panel, al “Guardar Cambios” del perfil se envía un `PUT` a `/api/profile/update` con nombre, teléfono, universidad, etc.
-3. Intercepta la petición (o construye una manualmente) y añade en el JSON:
-   ```json
-   {
-     "name": "Tu Nombre",
-     "phone": "...",
-     "university": "...",
-     "role": "coordinator"
-   }
-   ```
-   O envía solo: `{"role": "coordinator"}` (el backend mezcla con los datos actuales).
-4. Envía la petición. La sesión se actualiza y tu usuario pasa a tener rol `coordinator`.
-5. Recarga la página o ve a la raíz. Serás redirigido al **panel de coordinador**.
-6. **Flag 5:** En el panel de coordinador, en **Avisos del sistema**, uno de los avisos (p. ej. “Auditoría de seguridad”) contiene en su mensaje la flag: `FLAG{mass_assignment_abuse}`.
+1. Cierra sesion de empresa e inicia sesion como **estudiante**.
+2. Abre DevTools → Application → Cookies y copia el valor de **`session_token`**.
+3. Abre <code>/internal/docs</code>. Copia el comando de una linea segun tu sistema: **Linux/macOS**, **Windows (PowerShell)** o **Windows (CMD)**.
+4. Sustituye <code>TU_SESSION_TOKEN</code> por el valor de la cookie y ejecuta el comando.
+5. Si la respuesta es JSON con <code>"success": true</code>, recarga la app; deberias pasar al **panel de coordinador**. (Si envias <code>role: "admin"</code> el servidor responde 403; hay que usar <code>coordinator</code>.)
+6. **Flag 5:** En el panel de coordinador, en **Avisos del sistema**, uno de los avisos contiene la flag: `FLAG{mass_assignment_abuse}`.
 
 ---
 

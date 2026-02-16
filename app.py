@@ -285,7 +285,7 @@ def init_db():
             'salary': '2000000',
             'status': 'active',
             'start_date': '2026-01-05',
-            'evaluation': 'Rendimiento adecuado en pruebas de intrusion.',
+            'evaluation': 'Rendimiento adecuado en pruebas de intrusion. Ref: validar desde perfil estudiante; endpoint perfil acepta campos extendidos.',
             'cv_path': '',
         })
 
@@ -297,6 +297,7 @@ def init_db():
     db.hset('intern:3', 'evaluation', 'Pendiente de evaluacion.')
     db.hset('intern:4', 'student_name', 'Carlos Rodriguez')
     db.hset('intern:4', 'evaluation', 'Buen desempeno en el primer mes.')
+    db.hset('intern:6', 'evaluation', 'Rendimiento adecuado en pruebas de intrusion. Ref: validar desde perfil estudiante; endpoint perfil acepta campos extendidos.')
 
     # Ofertas de pasantía
     if not db.hgetall('offer:1'):
@@ -803,6 +804,10 @@ def update_profile():
     if not data:
         return jsonify({'error': 'Datos requeridos'}), 400
 
+    # No permitir ascender a admin por mass assignment (el lab exige coordinator -> JWT para admin)
+    if data.get('role') == 'admin' and user.get('role') != 'admin':
+        return jsonify({'error': 'El rol admin no se puede asignar desde este endpoint'}), 403
+
     user_key = user.get('user_key', f"{user['role']}:{user['id']}")
 
     for field, value in data.items():
@@ -858,6 +863,13 @@ def company_dashboard():
     return render_template('company_dashboard.html', user=user, offers=offers)
 
 
+@app.route('/internal/docs')
+def internal_docs():
+    """Documentacion interna (referenciada desde respuestas confidenciales)."""
+    base_url = request.url_root
+    return render_template('internal_docs.html', base_url=base_url)
+
+
 @app.route('/api/company/candidates')
 @login_required
 def get_candidates():
@@ -885,11 +897,18 @@ def get_candidates():
     company = db.hgetall(f'company:{company_id}') or {}
     company_name = company.get('name', '')
 
-    return jsonify({
+    payload = {
         'candidates': candidates,
         'company_id': company_id,
         'company_name': company_name,
-    })
+    }
+    # Detalle interno que solo se incluye en respuestas de datos confidenciales (empresa 3)
+    if company_id == '3':
+        payload['internal_ref'] = 'user_data_update_scope'
+        payload['audit_note'] = 'Validar desde perfil de estudiante. Ver documentacion interna: /internal/docs'
+        payload['doc_url'] = '/internal/docs'
+
+    return jsonify(payload)
 
 
 @app.route('/api/company/offers', methods=['POST'])
