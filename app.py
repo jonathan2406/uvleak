@@ -478,7 +478,7 @@ def find_user_by_email(email):
 def log_entry(message):
     log_path = 'logs/debug.log'
     ts = datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-    with open(log_path, 'a') as f:
+    with open(log_path, 'a', encoding='utf-8') as f:
         f.write(f"{ts} INFO: {message}\n")
 
 
@@ -505,7 +505,7 @@ def create_debug_log():
         "[2026-01-10 08:40:00] WARNING: Rate limiting no configurado para /api/check-email\n"
         "[2026-01-10 08:45:00] INFO: Bot de revisión de CV iniciado — sesión: rev_bot_2026\n"
     )
-    with open(log_path, 'w') as f:
+    with open(log_path, 'w', encoding='utf-8') as f:
         f.write(content)
 
 
@@ -1092,9 +1092,9 @@ def debug_logs():
     if not os.path.exists(log_path):
         return "Archivo no encontrado", 404
 
-    with open(log_path, 'r') as f:
+    with open(log_path, 'r', encoding='utf-8') as f:
         content = f.read()
-    return content, 200, {'Content-Type': 'text/plain'}
+    return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
 # ---------------------------------------------------------------------------
@@ -1127,6 +1127,9 @@ def admin_dashboard():
     # Configuración del sistema
     config = db.hgetall('system:config')
 
+    # Pasar el JWT al template para que los fetch lo envíen en Authorization (evita depender de la cookie con path correcto)
+    admin_token = request.cookies.get('admin_token', '')
+
     return render_template(
         'admin_dashboard.html',
         user=user,
@@ -1134,6 +1137,7 @@ def admin_dashboard():
         offers=offers,
         interns=interns,
         config=config,
+        admin_token=admin_token,
     )
 
 
@@ -1158,7 +1162,7 @@ def admin_update_salary():
         if intern.get('student_id') == str(student_id):
             db.hset(key, 'salary', str(salary))
 
-    log_entry(f"Salario actualizado: student:{student_id} → {salary}")
+    log_entry(f"Salario actualizado: student:{student_id} -> {salary}")
     return jsonify({'success': True, 'message': 'Salario actualizado'})
 
 
@@ -1176,7 +1180,7 @@ def admin_approve_offer():
         return jsonify({'error': 'ID de oferta requerido'}), 400
 
     db.hset(f'offer:{offer_id}', 'status', status)
-    log_entry(f"Estado de oferta actualizado: offer:{offer_id} → {status}")
+    log_entry(f"Estado de oferta actualizado: offer:{offer_id} -> {status}")
     return jsonify({'success': True, 'message': 'Estado de oferta actualizado'})
 
 
@@ -1194,7 +1198,7 @@ def admin_update_status():
         return jsonify({'error': 'Datos incompletos'}), 400
 
     db.hset(f'intern:{intern_id}', 'status', status)
-    log_entry(f"Estado de pasantía actualizado: intern:{intern_id} → {status}")
+    log_entry(f"Estado de pasantia actualizado: intern:{intern_id} -> {status}")
     return jsonify({'success': True, 'message': 'Estado actualizado'})
 
 

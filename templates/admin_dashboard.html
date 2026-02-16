@@ -29,8 +29,13 @@
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="salaryStudentId">ID del estudiante</label>
-                        <input type="number" id="salaryStudentId" value="1" class="form-input">
+                        <label for="salaryStudentId">Estudiante</label>
+                        <select id="salaryStudentId" class="form-input">
+                            <option value="">— Seleccionar estudiante —</option>
+                            {% for s in students %}
+                            <option value="{{ s.id }}">{{ s.name }} ({{ s.email }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="salaryAmount">Nuevo salario (COP)</label>
@@ -48,8 +53,13 @@
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="offerId">ID de la oferta</label>
-                        <input type="number" id="offerId" value="1" class="form-input">
+                        <label for="offerId">Oferta</label>
+                        <select id="offerId" class="form-input">
+                            <option value="">— Seleccionar oferta —</option>
+                            {% for o in offers %}
+                            <option value="{{ o.id }}">{{ o.title }} — {{ o.company_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="offerStatusSelect">Estado</label>
@@ -186,16 +196,28 @@
 </div>
 
 <script>
+var adminToken = {{ admin_token | tojson }};
+function adminHeaders() {
+    var h = { 'Content-Type': 'application/json' };
+    if (adminToken) h['Authorization'] = 'Bearer ' + adminToken;
+    return h;
+}
 async function updateSalary() {
     const status = document.getElementById('salaryStatus');
+    const studentId = document.getElementById('salaryStudentId').value;
+    if (!studentId) {
+        status.innerHTML = '<div class="alert alert-error">Selecciona un estudiante.</div>';
+        return;
+    }
     try {
         const res = await fetch('/api/admin/update-salary', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: adminHeaders(),
             body: JSON.stringify({
-                student_id: document.getElementById('salaryStudentId').value,
+                student_id: studentId,
                 salary: document.getElementById('salaryAmount').value
-            })
+            }),
+            credentials: 'include'
         });
         const data = await res.json();
         status.innerHTML = data.success
@@ -208,14 +230,20 @@ async function updateSalary() {
 
 async function approveOffer() {
     const status = document.getElementById('offerStatusResult');
+    const offerId = document.getElementById('offerId').value;
+    if (!offerId) {
+        status.innerHTML = '<div class="alert alert-error">Selecciona una oferta.</div>';
+        return;
+    }
     try {
         const res = await fetch('/api/admin/approve-offer', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: adminHeaders(),
             body: JSON.stringify({
-                offer_id: document.getElementById('offerId').value,
+                offer_id: offerId,
                 status: document.getElementById('offerStatusSelect').value
-            })
+            }),
+            credentials: 'include'
         });
         const data = await res.json();
         status.innerHTML = data.success
