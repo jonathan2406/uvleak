@@ -209,6 +209,12 @@ Este documento describe el flujo completo para resolver el laboratorio: desde un
      -d '{"bank_account":"99998888777"}'
    ```
    (Reemplaza `TU_JWT_AQUI` por tu token; si pones solo el token sin "Bearer ", el servidor responderá "No autorizado".)
+   En este último punto, la idea del laboratorio es hacer una **enumeración tipo
+   fuerza bruta de la estructura de la petición**: probar variantes y leer los
+   mensajes de error que devuelve la API para ajustar lo que falta o está mal.
+   Por ejemplo, el endpoint te va guiando con pistas como `no se leyo jwt`,
+   `jwt incorrecto` o `no se envio body`, hasta llegar al formato correcto
+   (`Authorization: Bearer <token>` + JSON con `bank_account`).
 5. La API responde con `success: true`, un mensaje indicando que las cuentas de todos los estudiantes fueron actualizadas (los salarios se abonarán en la cuenta indicada), la **flag 9:** **`FLAG{internlink_compromised}`** y la URL **`congratulations_url`**. Abre esa URL en el navegador para ver la página de felicitación por completar el lab y obtener un regalo (botón que abre un enlace al azar). **Laboratorio completado.**
 
 **Cierre del laboratorio:** Ser admin tiene un objetivo claro: ver las cuentas Bancolombia de los usuarios y, con la pista del log, descubrir y abusar del endpoint de actualización masiva para “poner tu cuenta” en todos ellos y recibir la flag final.
