@@ -40,7 +40,7 @@
                         <small style="color: #64748b; font-size: 0.875rem;">
                             <strong style="color: #475569;">CV actual:</strong> 
                             {% if user.cv_path %}
-                                <a href="/view-cv/{{ user.cv_path }}" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 500;">{{ user.cv_filename or user.cv_path }}</a>
+                                <a href="/view-cv/{{ user.cv_path }}" target="_blank" style="color: #1f5f87; text-decoration: none; font-weight: 500;">{{ user.cv_filename or user.cv_path }}</a>
                             {% else %}
                                 <span style="color: #94a3b8;">Ningún archivo subido</span>
                             {% endif %}
@@ -92,7 +92,7 @@
                             <strong>{{ offer.title }}</strong>
                             <span style="color: #64748b; font-weight: 500; font-size: 0.9rem;">— {{ offer.company_name }}</span>
                             <small style="display: block; margin-top: 0.75rem; color: #475569; line-height: 1.6;">{{ offer.description }}</small>
-                            <small class="text-muted" style="display: block; margin-top: 0.75rem; font-weight: 600; color: #6366f1;">Salario: ${{ offer.salary }} COP</small>
+                            <small class="text-muted" style="display: block; margin-top: 0.75rem; font-weight: 600; color: #1f5f87;">Salario: ${{ offer.salary }} COP</small>
                         </li>
                         {% endfor %}
                     </ul>

@@ -9,9 +9,9 @@
 }
 
 :root {
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --secondary: #8b5cf6;
+  --primary: #1f5f87;
+  --primary-dark: #164767;
+  --secondary: #245f7e;
   --success: #10b981;
   --error: #ef4444;
   --warning: #f59e0b;
@@ -43,7 +43,7 @@ body {
   overflow: hidden;
 }
 
-/* Fondo con imagen blur y overlay morado/azul */
+/* Fondo con imagen blur y overlay azul */
 .auth-container::before {
   content: "";
   position: absolute;
@@ -58,16 +58,16 @@ body {
   z-index: 0;
 }
 
-/* Overlay morado/azul sobre el fondo - menos opaco para que se vea la imagen */
+/* Overlay azul sobre el fondo - menos opaco para que se vea la imagen */
 .auth-container::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(99, 102, 241, 0.5) 0%,
-    rgba(139, 92, 246, 0.6) 50%,
-    rgba(79, 70, 229, 0.5) 100%
+    rgba(42, 108, 145, 0.5) 0%,
+    rgba(31, 95, 135, 0.6) 50%,
+    rgba(22, 71, 103, 0.5) 100%
   );
   z-index: 1;
 }
@@ -87,7 +87,7 @@ body {
 }
 
 .logo-section {
-  padding: 2.5rem 2rem 1.5rem;
+  padding: 3.5rem 3rem 2.5rem;
   text-align: center;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -115,7 +115,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.3));
+  filter: drop-shadow(0 4px 10px rgba(31, 95, 135, 0.3));
 }
 
 .platform-name {
@@ -296,8 +296,8 @@ body {
 
 .form-input:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+  border-color: #1f5f87;
+  box-shadow: 0 0 0 3px rgba(31, 95, 135, 0.12);
   background: #ffffff;
 }
 
@@ -340,23 +340,23 @@ textarea.form-input {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #2a6c91 0%, #1f5f87 100%);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 2px 8px rgba(31, 95, 135, 0.25);
   border: none;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #1f5f87 0%, #164767 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 12px rgba(31, 95, 135, 0.35);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 6px rgba(31, 95, 135, 0.3);
 }
 
 .btn-secondary {
@@ -590,7 +590,7 @@ textarea.form-input {
 .dashboard-header {
   margin-bottom: 2.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 2px solid rgba(99, 102, 241, 0.1);
+  border-bottom: 2px solid rgba(31, 95, 135, 0.16);
 }
 
 .dashboard-header h1 {
@@ -632,8 +632,8 @@ textarea.form-input {
   color: #92400e;
 }
 .badge-coordinator {
-  background: #e9d5ff;
-  color: #6b21a8;
+  background: #d8e4ec;
+  color: #1f425c;
 }
 .badge-admin {
   background: #fee2e2;
@@ -670,7 +670,7 @@ textarea.form-input {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(90deg, #2a6c91 0%, #1f5f87 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -678,7 +678,7 @@ textarea.form-input {
 .card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
-  border-color: rgba(99, 102, 241, 0.2);
+  border-color: rgba(31, 95, 135, 0.25);
 }
 
 .card:hover::before {
@@ -691,7 +691,7 @@ textarea.form-input {
 
 .card-header {
   padding: 1.5rem 1.75rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(139, 92, 246, 0.02));
+  background: linear-gradient(135deg, rgba(31, 95, 135, 0.05), rgba(42, 108, 145, 0.03));
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   position: relative;
 }
@@ -703,7 +703,7 @@ textarea.form-input {
   left: 1.75rem;
   right: 1.75rem;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(31, 95, 135, 0.24), transparent);
 }
 
 .card-header h3 {
@@ -1029,4 +1029,385 @@ code {
   .udem-header .udem-subtitle {
     font-size: 0.8rem;
   }
+}
+
+/* ========================================
+   Estética institucional clásica (réplica)
+   ======================================== */
+body {
+  font-family: Arial, Verdana, sans-serif;
+  background: #cfd3a9;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18) 0, rgba(255, 255, 255, 0) 32%),
+    radial-gradient(circle at 80% 40%, rgba(255, 255, 255, 0.14) 0, rgba(255, 255, 255, 0) 30%);
+  color: #2f2f2f;
+}
+
+.institutional-topbar {
+  background: linear-gradient(to bottom, #d8e9f5 0%, #b9d2e4 58%, #97b8cf 100%);
+  border: 1px solid #8aa3b5;
+  border-top: 0;
+  box-shadow: inset 0 1px 0 #e9f4fb;
+}
+
+.institutional-topbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.institutional-topbar-title {
+  color: #a32424;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.auth-container {
+  min-height: calc(100vh - 54px);
+  align-items: flex-start;
+  padding: 14px 10px 28px;
+}
+
+.auth-container::before,
+.auth-container::after {
+  display: none;
+}
+
+.auth-card {
+  max-width: 1040px;
+  width: 100%;
+  border: 1px solid #8c8c8c;
+  border-radius: 0;
+  background: #f8f8f8;
+  box-shadow: none;
+}
+
+.logo-section {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #b8b8b8;
+  background: #ececec;
+}
+
+.udem-logo-main {
+  width: 220px;
+  height: 78px;
+  margin: 0;
+  filter: none;
+  object-fit: contain;
+}
+
+.platform-name {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: middle;
+  font-size: 21px;
+  color: #1a3651;
+  letter-spacing: 0;
+}
+
+.platform-subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #565656;
+}
+
+.auth-form-section {
+  padding: 12px;
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 350px) 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.auth-main-column {
+  background: #efefef;
+  border: 1px dotted #8e8e8e;
+  padding: 10px;
+}
+
+.auth-instructions {
+  padding: 4px 8px;
+}
+
+.auth-instructions h3 {
+  color: #7f1616;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.auth-instructions ol {
+  margin-left: 18px;
+  margin-bottom: 14px;
+  color: #303030;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.auth-help-links {
+  margin-top: 12px;
+  color: #113f64;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-title {
+  color: #1d4a6c;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  color: #1e1e1e;
+  font-size: 12px;
+}
+
+.form-input {
+  border: 1px solid #4f86a6;
+  border-radius: 0;
+  padding: 6px 8px;
+  font-size: 12px;
+  height: 30px;
+}
+
+textarea.form-input {
+  height: auto;
+  min-height: 90px;
+}
+
+.form-input:focus {
+  border-color: #2f6f93;
+  box-shadow: 0 0 0 1px rgba(47, 111, 147, 0.2);
+}
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-warning {
+  border-radius: 14px;
+  border: 1px solid #8f1b1b;
+  box-shadow: none;
+  transform: none;
+  transition: background-color 0.15s ease;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-warning {
+  background: #a82727;
+  color: #fff;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-warning:hover {
+  background: #8f1f1f;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.info-links {
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.info-link {
+  border-radius: 0;
+  border: 1px solid #8f1b1b;
+  background: #b12f2f;
+  font-size: 12px;
+  box-shadow: none;
+  padding: 6px 8px;
+}
+
+.info-link:hover {
+  background: #8f1f1f;
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-links {
+  font-size: 12px;
+}
+
+.link-primary,
+.link-secondary {
+  color: #174768;
+}
+
+.footer-info {
+  border-top: 1px solid #b9b9b9;
+  margin-top: 12px;
+  padding-top: 8px;
+  font-size: 11px;
+  color: #6a6a6a;
+}
+
+.footer-info p {
+  margin: 2px 0;
+}
+
+.help-icons {
+  display: none;
+}
+
+.dashboard-container {
+  min-height: calc(100vh - 54px);
+  background: transparent;
+}
+
+.dashboard-nav {
+  background: linear-gradient(to bottom, #f2f2f2 0%, #dedede 100%);
+  border-bottom: 1px solid #b3b3b3;
+  box-shadow: none;
+  padding: 10px 16px;
+  position: static;
+}
+
+.nav-brand h2 {
+  font-size: 20px;
+  color: #30485a;
+  letter-spacing: 0;
+}
+
+.nav-user span {
+  color: #3e3e3e;
+  font-size: 13px;
+}
+
+.badge {
+  border-radius: 2px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+}
+
+.dashboard-content {
+  max-width: 1100px;
+  padding: 16px 10px 28px;
+}
+
+.dashboard-header {
+  border-bottom: 1px solid #b7b7b7;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+}
+
+.dashboard-header h1 {
+  font-size: 24px;
+  color: #194462;
+}
+
+.dashboard-header p {
+  color: #4a4a4a;
+  font-size: 13px;
+}
+
+.dashboard-grid {
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.card {
+  border: 1px solid #9c9c9c;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.card::before {
+  display: none;
+}
+
+.card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #8f8f8f;
+}
+
+.card-header {
+  background: #e7ecef;
+  border-bottom: 1px solid #b8c3cb;
+  padding: 10px 12px;
+}
+
+.card-header h3 {
+  font-size: 14px;
+  color: #1a4768;
+}
+
+.card-body {
+  padding: 12px;
+  font-size: 13px;
+}
+
+.list li,
+.notice-item,
+.stat-item {
+  border-radius: 0;
+}
+
+.data-table th,
+.data-table td {
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.data-table th {
+  color: #273949;
+  text-transform: none;
+  background: #eff3f5;
+}
+
+pre,
+code {
+  border-radius: 0;
+}
+
+@media (max-width: 900px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* ========================================
+   Ajuste final: paleta institucional
+   ======================================== */
+:root {
+  --primary: #1f5f87;
+  --primary-dark: #164767;
+  --secondary: #245f7e;
+}
+
+.badge-student,
+.badge-company,
+.badge-coordinator,
+.badge-admin,
+.badge-info {
+  background: #d8e4ec;
+  color: #1f425c;
+  box-shadow: none;
+}
+
+.stat-number,
+.text-info {
+  color: #1f5f87;
 }

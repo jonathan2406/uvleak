@@ -43,15 +43,15 @@
                     <form id="offerForm">
                         <div class="form-group">
                             <label for="offerTitle">Título del puesto</label>
-                            <input type="text" id="offerTitle" class="form-input" placeholder="Ej: Desarrollador Backend">
+                            <input type="text" id="offerTitle" class="form-input" placeholder="Ej: Desarrollador Backend" required>
                         </div>
                         <div class="form-group">
                             <label for="offerDesc">Descripción</label>
-                            <textarea id="offerDesc" class="form-input" rows="3" placeholder="Describa las responsabilidades y requisitos"></textarea>
+                            <textarea id="offerDesc" class="form-input" rows="3" placeholder="Describa las responsabilidades y requisitos" required></textarea>
                         </div>
                         <div class="form-group">
                             <label for="offerSalary">Salario mensual (COP)</label>
-                            <input type="number" id="offerSalary" class="form-input" placeholder="1500000">
+                            <input type="number" id="offerSalary" class="form-input" placeholder="1500000" min="1" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Publicar</button>
                     </form>
@@ -66,17 +66,19 @@
                 </div>
                 <div class="card-body">
                     {% if offers %}
-                    <ul class="list">
+                    <ul class="list" id="offersList">
                         {% for offer in offers %}
                         <li>
                             <strong>{{ offer.title }}</strong><br>
+                            <small style="display: block; margin-top: 0.4rem;">{{ offer.description }}</small>
                             <small>Estado: <span class="badge badge-{{ 'student' if offer.status == 'active' else 'coordinator' }}">{{ offer.status }}</span></small><br>
                             <small class="text-muted">Salario: ${{ offer.salary }} COP</small>
                         </li>
                         {% endfor %}
                     </ul>
                     {% else %}
-                    <p class="text-muted">No ha publicado ofertas aún.</p>
+                    <p id="offersEmptyState" class="text-muted">No ha publicado ofertas aún.</p>
+                    <ul class="list" id="offersList" style="display:none;"></ul>
                     {% endif %}
                 </div>
             </div>
@@ -137,24 +139,75 @@ async function loadCandidates() {
 loadCandidates();
 
 // Publicar oferta
+function appendPublishedOffer(title, description, salaryRaw) {
+    const offersList = document.getElementById('offersList');
+    const emptyState = document.getElementById('offersEmptyState');
+    if (!offersList) return;
+
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+    offersList.style.display = 'block';
+
+    const item = document.createElement('li');
+
+    const titleEl = document.createElement('strong');
+    titleEl.textContent = title;
+    item.appendChild(titleEl);
+    item.appendChild(document.createElement('br'));
+
+    const descEl = document.createElement('small');
+    descEl.style.display = 'block';
+    descEl.style.marginTop = '0.4rem';
+    descEl.textContent = description;
+    item.appendChild(descEl);
+
+    const statusEl = document.createElement('small');
+    statusEl.appendChild(document.createTextNode('Estado: '));
+    const badge = document.createElement('span');
+    badge.className = 'badge badge-student';
+    badge.textContent = 'active';
+    statusEl.appendChild(badge);
+    item.appendChild(statusEl);
+    item.appendChild(document.createElement('br'));
+
+    const salaryEl = document.createElement('small');
+    salaryEl.className = 'text-muted';
+    salaryEl.textContent = 'Salario: $' + salaryRaw + ' COP';
+    item.appendChild(salaryEl);
+
+    offersList.prepend(item);
+}
+
 document.getElementById('offerForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     const status = document.getElementById('offerStatus');
+    const title = document.getElementById('offerTitle').value.trim();
+    const description = document.getElementById('offerDesc').value.trim();
+    const salaryRaw = document.getElementById('offerSalary').value;
+    const salary = Number(salaryRaw);
+
+    if (!title || !description || !salaryRaw || Number.isNaN(salary) || salary <= 0) {
+        status.innerHTML = '<div class="alert alert-error">Debe completar título, descripción y salario válido para publicar la oferta.</div>';
+        return;
+    }
 
     try {
         const res = await fetch('/api/company/offers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                title: document.getElementById('offerTitle').value,
-                description: document.getElementById('offerDesc').value,
-                salary: document.getElementById('offerSalary').value,
+                title: title,
+                description: description,
+                salary: salaryRaw,
             })
         });
         const data = await res.json();
 
         if (data.success) {
             status.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
+            appendPublishedOffer(title, description, salaryRaw);
+            document.getElementById('offerForm').reset();
         } else {
             status.innerHTML = '<div class="alert alert-error">' + (data.error || 'Error') + '</div>';
         }

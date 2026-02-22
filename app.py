@@ -1649,14 +1649,30 @@ def admin_update_status():
 @app.route('/api/admin/bulk-update-payment-accounts', methods=['POST'])
 def admin_bulk_update_payment_accounts():
     """Actualiza de forma masiva la cuenta Bancolombia de todos los estudiantes (donde reciben el pago de pasantias). Solo admin."""
-    user = get_admin_user()
-    if not user:
-        return jsonify({'error': 'No autorizado'}), 403
+    # Para este endpoint se exige JWT explícito como pista del lab.
+    token = request.cookies.get('admin_token')
+    if not token:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            token = auth_header[7:]
 
-    data = request.json or {}
+    if not token:
+        return jsonify({'error': 'No autorizado, no se leyo JWT'}), 403
+
+    try:
+        decoded = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        if decoded.get('role') != 'admin':
+            return jsonify({'error': 'No autorizado, JWT incorrecto'}), 403
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'No autorizado, JWT incorrecto'}), 403
+
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({'error': 'no se envio body'}), 400
+
     bank_account = (data.get('bank_account') or '').strip()
     if not bank_account:
-        return jsonify({'error': 'Se requiere bank_account (cuenta Bancolombia)'}), 400
+        return jsonify({'error': 'Se requiere parametro "bank_account:cuenta" (cuenta Bancolombia)'}), 400
 
     count = 0
     for key in db.keys('student:*'):

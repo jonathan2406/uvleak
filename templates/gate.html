@@ -10,61 +10,74 @@ block body %}
     </div>
 
     <div class="auth-form-section">
-      <h2 class="form-title">Verificación de invitación</h2>
-      <p class="gate-description">
-        Para acceder a InternLink debe ingresar el correo electrónico de la
-        persona que lo invitó a la plataforma.
-      </p>
-      <p class="text-muted" style="font-size: 0.85rem; margin-top: 0.5rem;">
-        <strong>Laboratorio de seguridad.</strong> Objetivo del ejercicio: demostrar el compromiso total de la plataforma y recuperar la evidencia crítica que el cliente ha identificado (consulte el enunciado del lab).
-      </p>
+      <div class="auth-layout">
+        <div class="auth-main-column">
+          <h2 class="form-title">Verificación de invitación</h2>
 
-      {% if request.args.get('msg') == 'verify_first' %}
-      <div id="gateVerifyFirstWarning" class="alert alert-warning">
-        Debe verificar su invitación antes de acceder al inicio de sesión o al
-        registro.
-      </div>
-      {% endif %}
-
-      <div id="gateFormBlock">
-        <form id="gateForm" class="auth-form">
-          <div class="form-group">
-            <label for="gateEmail">Correo del invitador</label>
-            <input
-              type="email"
-              id="gateEmail"
-              name="email"
-              required
-              placeholder="invitador@ejemplo.com"
-              class="form-input"
-              autocomplete="email"
-            />
+          {% if request.args.get('msg') == 'verify_first' %}
+          <div id="gateVerifyFirstWarning" class="alert alert-warning">
+            Debe verificar su invitación antes de acceder al inicio de sesión o al
+            registro.
           </div>
-          <button type="submit" class="btn btn-primary btn-block">
-            Verificar invitación
-          </button>
-        </form>
-        <p class="gate-hint text-muted mt-2" style="font-size: 0.8rem">
-          Soporte: el recurso de verificación de correo admite más de un tipo de
-          solicitud.
-        </p>
-        <div id="gateStatus" class="mt-2"></div>
-      </div>
+          {% endif %}
 
-      <div id="gateResultBlock" class="gate-result" style="display: none">
-        <div id="gateResultMessage" class="alert"></div>
-        <div class="gate-actions" id="gateActions" style="display: none">
-          <a id="gateLoginLink" href="#" class="btn btn-primary"
-            >Iniciar sesión</a
-          >
-          <a id="gateRegisterLink" href="#" class="btn btn-primary"
-            >Crear cuenta nueva</a
-          >
+          <div id="gateFormBlock">
+            <form id="gateForm" class="auth-form">
+              <div class="form-group">
+                <label for="gateEmail">Correo del invitador</label>
+                <input
+                  type="email"
+                  id="gateEmail"
+                  name="email"
+                  required
+                  placeholder="invitador@ejemplo.com"
+                  class="form-input"
+                  autocomplete="email"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">
+                Verificar invitación
+              </button>
+            </form>
+            <p class="gate-hint text-muted mt-2" style="font-size: 0.8rem">
+              Soporte: el recurso de verificación de correo admite más de un tipo de
+              solicitud.
+            </p>
+            <div id="gateStatus" class="mt-2"></div>
+          </div>
+
+          <div id="gateResultBlock" class="gate-result" style="display: none">
+            <div id="gateResultMessage" class="alert"></div>
+            <div class="gate-actions" id="gateActions" style="display: none">
+              <a id="gateLoginLink" href="#" class="btn btn-primary"
+                >Iniciar sesión</a
+              >
+              <a id="gateRegisterLink" href="#" class="btn btn-primary"
+                >Crear cuenta nueva</a
+              >
+            </div>
+            <p id="gateHint" class="gate-hint" style="display: none"></p>
+            <button type="button" id="gateBackBtn" class="btn btn-secondary mt-2">
+              Verificar otro correo
+            </button>
+          </div>
         </div>
-        <p id="gateHint" class="gate-hint" style="display: none"></p>
-        <button type="button" id="gateBackBtn" class="btn btn-secondary mt-2">
-          Verificar otro correo
-        </button>
+
+        <aside class="auth-instructions">
+          <h3>Para ingresar al sistema siga los siguientes pasos.</h3>
+          <ol>
+            <li>Ingrese el correo de la persona que lo invitó.</li>
+            <li>Valide la invitación antes de continuar.</li>
+            <li>Use el enlace de acceso disponible al finalizar.</li>
+          </ol>
+          <p class="gate-description">
+            Para acceder a InternLink debe ingresar el correo electrónico de la
+            persona que lo invitó a la plataforma.
+          </p>
+          <p class="text-muted" style="font-size: 0.85rem; margin-top: 0.5rem;">
+            <strong>Laboratorio de seguridad.</strong> Objetivo del ejercicio: demostrar el compromiso total de la plataforma y recuperar la evidencia crítica que el cliente ha identificado (consulte el enunciado del lab).
+          </p>
+        </aside>
       </div>
 
       <div class="footer-info">
